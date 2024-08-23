@@ -1,14 +1,14 @@
-# Log Summarizer
+# Log Analyzer
 
-Backend with fastapi+uvicorn for log summarization with LLMs.
+Backend with fastapi+uvicorn for log analysis with LLMs.
 
-- [Log Summarizer](#log-summarizer)
+- [Log Analyzer](#log-analyzer)
   - [Setup](#setup)
     - [1. Create .env file](#1-create-env-file)
     - [2. Create shared volumes directory](#2-create-shared-volumes-directory)
-  - [Running the summarization service](#running-the-summarization-service)
-    - [i) Uvicorn server with fastapi with Docker](#i-uvicorn-server-with-fastapi-with-docker)
-    - [ii) Uvicorn server with fastapi with venv](#ii-uvicorn-server-with-fastapi-with-venv)
+  - [Running the analysis service](#running-the-analysis-service)
+    - [Option A) Uvicorn server with fastapi with Docker](#option-a-uvicorn-server-with-fastapi-with-docker)
+    - [Option B) Uvicorn server with fastapi with venv](#option-b-uvicorn-server-with-fastapi-with-venv)
     - [Optionally expose app through ngrok docker for sharing localhost on the internet](#optionally-expose-app-through-ngrok-docker-for-sharing-localhost-on-the-internet)
   - [Testing](#testing)
   - [TODO](#todo)
@@ -20,23 +20,31 @@ Backend with fastapi+uvicorn for log summarization with LLMs.
 Create a `.env` file with the following keys with updated values for unames and pass:
 
 ```yaml
-# set to False for deployment
-DEBUG=True
+# set to ERROR for deployment
+DEBUG_LEVEL=DEBUG
 # http api server
 API_SERVER_PORT=8080
+# openai api key
+OPENAI_API_KEY=<OPENAI_API_KEY>
+# langchain langsmith keys
+USER_AGENT=log_analyzer
+LANGCHAIN_PROJECT=log_analyzer
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
+LANGCHAIN_API_KEY=<LANGCHAIN_API_KEY>
 ```
 
 ### 2. Create shared volumes directory
 
 ```shell
-mkdir -p volumes/log_summarizer
+mkdir -p volumes/log_analyzer
 ```
 
-## Running the summarization service
+## Running the analysis service
 
-There are two options for running the summarization service.
+There are two options for running the analysis service.
 
-### i) Uvicorn server with fastapi with Docker
+### Option A) Uvicorn server with fastapi with Docker
 
 Build server container
 
@@ -52,7 +60,7 @@ bash scripts/run_docker.sh -p EXPOSED_HTTP_PORT
 
 The server will be available at <http://localhost:8080> if using the default port.
 
-### ii) Uvicorn server with fastapi with venv
+### Option B) Uvicorn server with fastapi with venv
 
 Install requirements inside venv or conda environment
 
@@ -75,7 +83,7 @@ The server will be available at <http://localhost:8080> if using the default por
 WARNING: Never use for production
 
 ```bash
-# start log summarizer with python
+# start log analyzer with python
 # sign up for ngrok account at https://ngrok.com/
 # https://ngrok.com/docs/using-ngrok-with/docker/
 docker pull ngrok/ngrok
