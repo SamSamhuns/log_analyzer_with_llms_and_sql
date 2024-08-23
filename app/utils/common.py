@@ -32,8 +32,9 @@ def remove_file(path: str) -> None:
     """
     if os.path.exists(path):
         os.remove(path)
+        logger.info("Successfully removed file: %s", path)
     else:
-        logger.warning("File not found: %s", path)
+        logger.warning("File removal failed: %s", path)
 
 
 async def cache_file_locally(file_cache_path: str, data: bytes) -> None:
