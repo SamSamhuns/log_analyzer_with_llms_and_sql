@@ -7,7 +7,7 @@ RUN apt-get update --no-install-recommends \
 # set username & uid inside docker
 ARG UNAME=user1
 ARG UID=1000
-ENV WORKDIR="/home/$UNAME/log_summarizer"
+ENV WORKDIR="/home/$UNAME/log_analyzer"
 
 # add user UNAME as a member of the sudoers group
 RUN useradd -rm --home-dir "/home/$UNAME" --shell /bin/bash -g root -G sudo -u "$UID" "$UNAME"
