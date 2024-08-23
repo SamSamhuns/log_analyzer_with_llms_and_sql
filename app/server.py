@@ -31,8 +31,8 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
-import app.core.config as cfg
-from app.routes import upsert, search, qa, summarize
+import core.config as cfg
+from routes import upsert, search, qa, summarize
 
 
 def get_application():
@@ -76,14 +76,14 @@ def custom_openapi():
 
 
 # logging
-logger = logging.getLogger("log_summarizer_server")
+logger = logging.getLogger("log_analyzer_server")
 
 # Routing
 app = get_application()
 app.include_router(upsert.router, prefix="/upsert", tags=["upsert"])
 app.include_router(search.router, prefix="/search", tags=["search"])
 app.include_router(qa.router, prefix="/qa", tags=["qa"])
-app.include_router(summarize.router, prefix="/summarizer", tags=["summarize"])
+app.include_router(summarize.router, prefix="/summarize", tags=["summarize"])
 app.openapi = custom_openapi
 
 
@@ -106,7 +106,7 @@ async def add_process_time_header(request: Request, call_next):
 @app.get("/")
 async def index():
     """Returns a welcome message."""
-    return {"Welcome to the Log Summarizer service": "Please visit /docs for list of apis"}
+    return {"Welcome to the Log Analysis service": "Please visit /docs for list of apis"}
 
 
 @app.get('/favicon.ico')
