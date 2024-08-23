@@ -10,19 +10,23 @@ INFO     20
 DEBUG    10
 NOTSET    0
 """
+import os
 from pydantic import BaseModel
 
 
 class LogConfig(BaseModel):
     """Logging configuration to be set for the server"""
 
-    INFO_FILE_PATH = "info.log"
-    ERROR_FILE_PATH = "error.log"
+    INFO_FILE_PATH: str = "info.log"
+    ERROR_FILE_PATH: str = "error.log"
+
+    # Fetch debug level from environment variable or default to 'DEBUG' if not set
+    DEBUG_LEVEL: str = os.getenv('DEBUG_LEVEL', 'DEBUG')
 
     # Logging config
-    version = 1
-    disable_existing_loggers = False
-    formatters = {
+    version: int = 1
+    disable_existing_loggers: bool = False
+    formatters: dict = {
         'info': {
             "()": "uvicorn.logging.DefaultFormatter",
             "fmt": "%(levelprefix)s | %(asctime)s | %(name)s | %(message)s",
@@ -34,15 +38,15 @@ class LogConfig(BaseModel):
             "datefmt": "%Y-%m-%d %H:%M:%S",
         },
     }
-    handlers = {
+    handlers: dict = {
         'debug_console_handler': {
-            'level': 'DEBUG',
+            'level': DEBUG_LEVEL,
             'formatter': 'info',
             'class': 'logging.StreamHandler',
             'stream': 'ext://sys.stdout',
         },
         'info_rotating_file_handler': {
-            'level': 'INFO',
+            'level': 'INFO', # Log all levels form INFO & above to file
             'formatter': 'info',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': INFO_FILE_PATH,
@@ -74,12 +78,12 @@ class LogConfig(BaseModel):
             'subject': 'Critical error with application name'
         },
     }
-    loggers = {
+    loggers: dict = {
         '': {  # root logger
-            'level': 'NOTSET',
+            'level': DEBUG_LEVEL,
             'handlers': ['debug_console_handler', 'info_rotating_file_handler', 'error_file_handler', 'critical_mail_handler'],
         },
-        'log_summarizer': {
+        'log_analyzer': {
             'level': 'INFO',
             'propagate': False,
             'handlers': ['debug_console_handler', 'info_rotating_file_handler', 'error_file_handler'],

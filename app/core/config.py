@@ -4,7 +4,10 @@ Load configurations and constants
 import os
 from logging.config import dictConfig
 from models.logging import LogConfig
+from dotenv import load_dotenv
 
+# load environment variables from .env file
+load_dotenv()
 
 # project information
 PROJECT_NAME: str = "Log Summarizer API template"
@@ -13,7 +16,7 @@ DEBUG: bool = os.environ.get("DEBUG", "") != "False"
 VERSION: str = "0.0.1"
 
 # save directories
-ROOT_STORAGE_DIR = os.getenv("ROOT_STORAGE_DIR", default="volumes/log_summarizer")
+ROOT_STORAGE_DIR = os.getenv("ROOT_STORAGE_DIR", default="volumes/log_analyzer")
 FILE_STORAGE_DIR = os.getenv("FILE_STORAGE_DIR", default=os.path.join(ROOT_STORAGE_DIR, "files"))
 LOG_STORAGE_DIR = os.getenv("LOG_STORAGE_DIR", default=os.path.join(ROOT_STORAGE_DIR, "logs"))
 
