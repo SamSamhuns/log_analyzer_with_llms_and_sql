@@ -10,8 +10,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # project information
-PROJECT_NAME: str = "Log Summarizer API template"
-PROJECT_DESCRIPTION: str = "Template API for Log Summarizer"
+PROJECT_NAME: str = "Log Analyzer API template"
+PROJECT_DESCRIPTION: str = "Template API for Log Analyzer"
 DEBUG: bool = os.environ.get("DEBUG", "") != "False"
 VERSION: str = "0.0.1"
 
