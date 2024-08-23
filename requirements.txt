@@ -1,0 +1,7 @@
+aiofiles==24.1.0
+email_validator==2.2.0
+fastapi==0.112.1
+pypdf==4.3.1
+python-multipart==0.0.9
+requests==2.32.3
+uvicorn==0.30.6
