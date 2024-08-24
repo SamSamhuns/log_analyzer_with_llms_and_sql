@@ -15,6 +15,9 @@ PROJECT_DESCRIPTION: str = "Template API for Log Analyzer"
 DEBUG: bool = os.environ.get("DEBUG", "") != "False"
 VERSION: str = "0.0.1"
 
+# server settings
+API_SERVER_PORT = int(os.getenv("API_SERVER_PORT", default="8080"))
+
 # save directories
 ROOT_STORAGE_DIR = os.getenv("ROOT_STORAGE_DIR", default="volumes/log_analyzer")
 FILE_STORAGE_DIR = os.getenv("FILE_STORAGE_DIR", default=os.path.join(ROOT_STORAGE_DIR, "files"))
