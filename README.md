@@ -6,9 +6,11 @@ Backend with fastapi+uvicorn for log analysis with LLMs.
   - [Setup](#setup)
     - [1. Create .env file](#1-create-env-file)
     - [2. Create shared volumes directory](#2-create-shared-volumes-directory)
-  - [Running the analysis service](#running-the-analysis-service)
-    - [Option A) Uvicorn server with fastapi with Docker](#option-a-uvicorn-server-with-fastapi-with-docker)
-    - [Option B) Uvicorn server with fastapi with venv](#option-b-uvicorn-server-with-fastapi-with-venv)
+  - [Running the log analysis service](#running-the-log-analysis-service)
+    - [Option A) Docker Compose](#option-a-docker-compose)
+    - [Option B) Docker and local virtual env](#option-b-docker-and-local-virtual-env)
+      - [Option Bi) Uvicorn server with fastapi with Docker](#option-bi-uvicorn-server-with-fastapi-with-docker)
+      - [Option Bii) Uvicorn server with fastapi with venv](#option-bii-uvicorn-server-with-fastapi-with-venv)
     - [Optionally expose app through ngrok docker for sharing localhost on the internet](#optionally-expose-app-through-ngrok-docker-for-sharing-localhost-on-the-internet)
   - [Testing](#testing)
   - [TODO](#todo)
@@ -32,6 +34,19 @@ LANGCHAIN_PROJECT=log_analyzer
 LANGCHAIN_TRACING_V2=true
 LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
 LANGCHAIN_API_KEY=<LANGCHAIN_API_KEY>
+# mysql mariadb
+MYSQL_HOST=mysql
+MYSQL_PORT=3306
+MYSQL_USER=user
+MYSQL_PASSWORD=pass
+MYSQL_DATABASE=default
+MYSQL_ROOT_PASSWORD=admin
+# phpmyadmin mariadb
+PMA_GUI_PORT=8001
+PMA_HOST=${MYSQL_HOST}
+PMA_PORT=${MYSQL_PORT}
+PMA_USER=${MYSQL_USER}
+PMA_PASSWORD=${MYSQL_PASSWORD}
 ```
 
 ### 2. Create shared volumes directory
@@ -40,27 +55,44 @@ LANGCHAIN_API_KEY=<LANGCHAIN_API_KEY>
 mkdir -p volumes/log_analyzer
 ```
 
-## Running the analysis service
+## Running the log analysis service
 
-There are two options for running the analysis service.
+There are two options for running the analysis service. Both require `docker compose` (Available from the [official docker site](https://docs.docker.com/compose/install/)). `$docker-compose ...` style commands have been depreciated.
 
-### Option A) Uvicorn server with fastapi with Docker
+### Option A) Docker Compose
 
-Build server container
+Note: some services are set to bind to all addresses which should be changed in a production environment.
+
+```shell
+# build all required containers
+docker compose build
+# start all services
+docker compose up -d
+```
+
+The server will be available at <http://localhost:8080> if using the default port.
+
+### Option B) Docker and local virtual env
+
+```shell
+# build all required containers
+docker compose build
+# start mysql server & phpmyadmin server
+docker compose up -d mysql mysql-admin
+```
+
+#### Option Bi) Uvicorn server with fastapi with Docker
+
+Build server container and start server at HTTP port EXPOSED_HTTP_PORT
 
 ```shell
 bash scripts/build_docker.sh
-```
-
-Start server at HTTP port EXPOSED_HTTP_PORT
-
-```shell
 bash scripts/run_docker.sh -p EXPOSED_HTTP_PORT
 ```
 
 The server will be available at <http://localhost:8080> if using the default port.
 
-### Option B) Uvicorn server with fastapi with venv
+#### Option Bii) Uvicorn server with fastapi with venv
 
 Install requirements inside venv or conda environment
 
@@ -70,7 +102,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Start server at HTTP port EXPOSED_HTTP_PORT. Note the host names must contain addresses when using docker microservices and the fastapi+uvicorn server outside the docker-compose environment.
+Start server at HTTP port EXPOSED_HTTP_PORT. Note the host names must contain addresses when using docker microservices and the fastapi+uvicorn server outside the docker compose environment.
 
 ```shell
 python app/server.py -p EXPOSED_HTTP_PORT
@@ -95,7 +127,7 @@ docker run -it -e NGROK_AUTHTOKEN=<NGROK_AUTHTOKEN> ngrok/ngrok:latest http host
 
 ## Testing
 
-Note: all the microservices must already be running with docker-compose.
+Note: all the microservices must already be running with docker compose.
 
 Install requirements:
 
