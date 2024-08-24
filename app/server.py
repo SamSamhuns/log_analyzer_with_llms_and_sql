@@ -119,11 +119,11 @@ async def favicon():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        """Start FastAPI with uvicorn server hosting inference models""")
+        """Start FastAPI with uvicorn server hosting log analyzer""")
     parser.add_argument('--ip', '--host_ip', dest="host_ip", type=str, default="0.0.0.0",
                         help='host ip address. (default: %(default)s)')
-    parser.add_argument('-p', '--port', type=int, default=8080,
-                        help='uvicorn port number. (default: %(default)s)')
+    parser.add_argument('-p', '--port', type=int, default=cfg.API_SERVER_PORT,
+                        help='uvicorn port number. Overrides .env (default: %(default)s)')
     parser.add_argument('-w', '--workers', type=int, default=1,
                         help="number of uvicorn workers. (default: %(default)s)")
     parser.add_argument('-r', '--reload', action='store_true',
