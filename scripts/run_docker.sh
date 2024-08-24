@@ -1,6 +1,6 @@
 #!/bin/bash
 
-def_cont_name=log_analyzer_cont
+def_cont_name=log_summarizer-log_analyze_cont
 
 helpFunction()
 {
@@ -39,4 +39,4 @@ docker run \
       -p "0.0.0.0:$port:8080" \
       -v "$PWD/volumes/log_analyzer:/home/user1/log_analyzer/data" \
       --name "$def_cont_name" \
-      log_analyzer:latest
+      log_summarizer-log_analyze:latest
