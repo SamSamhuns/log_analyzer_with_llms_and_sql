@@ -27,6 +27,13 @@ os.makedirs(ROOT_STORAGE_DIR, exist_ok=True)
 os.makedirs(FILE_STORAGE_DIR, exist_ok=True)
 os.makedirs(LOG_STORAGE_DIR, exist_ok=True)
 
+# mysql conf
+MYSQL_HOST = os.getenv("MYSQL_HOST", default="0.0.0.0")
+MYSQL_PORT = int(os.getenv("MYSQL_PORT", default="3306"))
+MYSQL_USER = os.getenv("MYSQL_USER", default="user")
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", default="pass")
+MYSQL_DATABASE = os.getenv("MYSQL_DATABASE", default="default")
+
 # logging conf
 log_cfg = LogConfig()
 # override info & error log paths
