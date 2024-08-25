@@ -18,3 +18,10 @@ class SummarizerMode(str, Enum):
     """
     INDIVIDUAL: str = "individual"
     COMBINED: str = "combined"
+
+
+class LogFileType(str, Enum):
+    """
+    Log file types
+    """
+    ANOMALY_DETECTION: str = "anomaly_detection"
