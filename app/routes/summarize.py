@@ -9,8 +9,8 @@ from langchain.chains.summarize import load_summarize_chain
 from langchain_community.document_loaders import WebBaseLoader
 
 from models.model import SummarizerMode
-from api.llms import llm
-from api.stream_document_loader import CustomStreamDocumentLoader
+from api.langchain_custom.llms import llm
+from api.langchain_custom.stream_document_loader import CustomStreamDocumentLoader
 
 router = APIRouter()
 logger = logging.getLogger('summarize_route')
