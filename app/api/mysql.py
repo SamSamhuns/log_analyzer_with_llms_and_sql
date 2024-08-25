@@ -7,15 +7,15 @@ import pymysql
 logger = logging.getLogger('mysql_api')
 
 
-def insert_data_into_sql(mysql_conn, mysql_tb, data_dict: dict, commit: bool = True) -> dict:
+def insert_data_into_sql(mysql_conn, tb_name, data_dict: dict, commit: bool = True) -> dict:
     """
     Insert data_dict into mysql table with param binding
     Note: the transaction must be commited after if commit is False
     """
-    # query fmt: `INSERT INTO mysql_tb (id, col1_name, col2_name) VALUES (%s, %s, %s)`
+    # query fmt: `INSERT INTO tb_name (id, col1_name, col2_name) VALUES (%s, %s, %s)`
     col_names = ', '.join(data_dict.keys())
     placeholders = ', '.join(['%s'] * len(data_dict))
-    query = f"INSERT INTO {mysql_tb} ({col_names}) VALUES ({placeholders})".replace("'", '')
+    query = f"INSERT INTO {tb_name} ({col_names}) VALUES ({placeholders})".replace("'", '')
     values = tuple(data_dict.values())
     try:
         with mysql_conn.cursor() as cursor:
@@ -34,11 +34,11 @@ def insert_data_into_sql(mysql_conn, mysql_tb, data_dict: dict, commit: bool = T
                 "message": "mysql record insertion error"}
 
 
-def select_data_from_sql_with_id(mysql_conn, mysql_tb, data_id: int) -> dict:
+def select_data_from_sql_with_id(mysql_conn, tb_name, data_id: int) -> dict:
     """
     Query mysql db to get the data record using the uniq data_id
     """
-    query = f"SELECT * FROM {mysql_tb} WHERE id = %s"
+    query = f"SELECT * FROM {tb_name} WHERE id = %s"
     values = (data_id,)
     try:
         with mysql_conn.cursor() as cursor:
@@ -58,11 +58,11 @@ def select_data_from_sql_with_id(mysql_conn, mysql_tb, data_id: int) -> dict:
                 "message": "mysql record retrieval error"}
 
 
-def select_all_data_from_sql(mysql_conn, mysql_tb) -> dict:
+def select_all_data_from_sql(mysql_conn, tb_name) -> dict:
     """
     Query mysql db to get all data
     """
-    query = f"SELECT * FROM {mysql_tb}"
+    query = f"SELECT * FROM {tb_name}"
     try:
         with mysql_conn.cursor() as cursor:
             cursor.execute(query)
@@ -81,12 +81,12 @@ def select_all_data_from_sql(mysql_conn, mysql_tb) -> dict:
                 "message": "mysql record retrieval error"}
 
 
-def delete_data_from_sql_with_id(mysql_conn, mysql_tb, data_id: int, commit: bool = True) -> dict:
+def delete_data_from_sql_with_id(mysql_conn, tb_name, data_id: int, commit: bool = True) -> dict:
     """
     Delete record from mysql db using the uniq data_id
     """
-    select_query = f"SELECT * FROM {mysql_tb} WHERE id = %s"
-    del_query = f"DELETE FROM {mysql_tb} WHERE id = %s"
+    select_query = f"SELECT * FROM {tb_name} WHERE id = %s"
+    del_query = f"DELETE FROM {tb_name} WHERE id = %s"
     try:
         with mysql_conn.cursor() as cursor:
             # check if record exists in db or not
@@ -109,3 +109,28 @@ def delete_data_from_sql_with_id(mysql_conn, mysql_tb, data_id: int, commit: boo
         logger.error("%s: mysql record deletion failed ❌", excep)
         return {"status": "failed",
                 "message": "mysql record deletion error"}
+
+
+def table_exists(mysql_conn, tb_name: str) -> bool:
+    """Check if table exists in the database"""
+    try:
+        with mysql_conn.cursor() as cursor:
+            cursor.execute(f"SHOW TABLES LIKE '{tb_name}'")
+            result = cursor.fetchone()
+            return result is not None
+    except pymysql.MySQLError as e:
+        print(f"Error checking if table exists: {e}")
+        return False
+
+
+def entry_exists(mysql_conn, tb_name: str, entry_id) -> bool:
+    """Check if an entry exists in the table"""
+    try:
+        with mysql_conn.cursor() as cursor:
+            query = f"SELECT 1 FROM `{tb_name}` WHERE ID = %s LIMIT 1"
+            cursor.execute(query, (entry_id,))
+            result = cursor.fetchone()
+            return result is not None
+    except pymysql.MySQLError as e:
+        print(f"Error checking if entry exists: {e}")
+        return False
