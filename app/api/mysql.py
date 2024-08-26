@@ -7,6 +7,40 @@ import pymysql
 logger = logging.getLogger('mysql_api')
 
 
+def insert_bulk_data_into_sql(mysql_conn, tb_name, data_dicts: list, commit: bool = True) -> dict:
+    """
+    Insert multiple records into a MySQL table with param binding. Efficiently handles bulk inserts.
+    Note: the transaction must be committed after if commit is False
+    """
+    if not data_dicts:
+        return {"status": "failed", "message": "No data provided"}
+
+    # Assuming all dictionaries have the same keys, 
+    # which should be the case for consistent bulk inserts
+    col_names = ', '.join(data_dicts[0].keys())
+    placeholders = ', '.join(['%s'] * len(data_dicts[0]))
+    query = f"INSERT INTO {tb_name} ({col_names}) VALUES ({placeholders})".replace("'", '')
+
+    # Prepare the list of tuples for insertion
+    values = [tuple(data_dict.values()) for data_dict in data_dicts]
+
+    try:
+        with mysql_conn.cursor() as cursor:
+            cursor.executemany(query, values)
+            if commit:
+                mysql_conn.commit()
+                logger.info("Bulk records inserted into mysql db.✅️")
+                return {"status": "success", 
+                        "message": "Bulk records inserted into mysql db"}
+            logger.info("Bulk record insertion waiting to be committed to mysql db.🕓")
+            return {"status": "success", 
+                    "message": "Bulk record insertion waiting to be committed to mysql db."}
+    except pymysql.Error as excep:
+        logger.error("%s: mysql bulk record insertion failed ❌", excep)
+        return {"status": "failed", 
+                "message": f"mysql bulk record insertion error: {str(excep)}"}
+
+
 def insert_data_into_sql(mysql_conn, tb_name, data_dict: dict, commit: bool = True) -> dict:
     """
     Insert data_dict into mysql table with param binding
@@ -123,14 +157,28 @@ def table_exists(mysql_conn, tb_name: str) -> bool:
         return False
 
 
-def entry_exists(mysql_conn, tb_name: str, entry_id) -> bool:
-    """Check if an entry exists in the table"""
+def entries_exist(connection, tb_name: str, conditions: dict, logic: str = 'AND'):
+    """
+    CHeck if entries exist in a table
+    Example use:
+        table_name = 'table_name'
+        conditions = {
+            "col1": 123,  # Column 'col1' should equal 123
+            "col2": 456   # Column 'col2' should equal 456
+        }
+        Choose 'AND' or 'OR' based on how to combine the conditions
+    """
     try:
-        with mysql_conn.cursor() as cursor:
-            query = f"SELECT 1 FROM `{tb_name}` WHERE ID = %s LIMIT 1"
-            cursor.execute(query, (entry_id,))
+        assert logic in {"AND", "OR"}
+        with connection.cursor() as cursor:
+            # Construct the WHERE clause dynamically based on provided conditions and logic
+            clause = f" {logic} ".join([f"{column} = %s" for column, _ in conditions])
+            query = f"SELECT 1 FROM `{tb_name}` WHERE {clause} LIMIT 1"
+            # Extract values for the SQL query parameters
+            values = tuple(value for _, value in conditions)
+            cursor.execute(query, values)
             result = cursor.fetchone()
             return result is not None
     except pymysql.MySQLError as e:
-        print(f"Error checking if entry exists: {e}")
+        print(f"Error checking if entries exist: {e}")
         return False
