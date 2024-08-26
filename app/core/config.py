@@ -21,6 +21,7 @@ API_SERVER_PORT = int(os.getenv("API_SERVER_PORT", default="8080"))
 # save directories
 ROOT_STORAGE_DIR = os.getenv("ROOT_STORAGE_DIR", default="volumes/log_analyzer")
 FILE_STORAGE_DIR = os.getenv("FILE_STORAGE_DIR", default=os.path.join(ROOT_STORAGE_DIR, "files"))
+VECTOR_STORE_DIR = os.getenv("VECTOR_STORE_DIR", default=os.path.join(ROOT_STORAGE_DIR, "vector_store"))
 LOG_STORAGE_DIR = os.getenv("LOG_STORAGE_DIR", default=os.path.join(ROOT_STORAGE_DIR, "logs"))
 
 os.makedirs(ROOT_STORAGE_DIR, exist_ok=True)
