@@ -1,6 +1,6 @@
 #!/bin/bash
 
-def_cont_name=log_summarizer-log_analyze_cont
+def_cont_name=log_summarizer-log_analyzer_cont
 
 helpFunction()
 {
@@ -33,10 +33,13 @@ if [ "$(docker ps -q -f name=$def_cont_name)" ]; then
     echo "Stopped container '$def_cont_name'"
 fi
 
-mkdir -p "$PWD/volumes/log_analyzer"  # create shared vol with correct perms
+# create shared vol with correct perms
+mkdir -p "$PWD/volumes/log_analyzer"
+mkdir -p "$PWD/volumes/store"
+
 docker run \
       -ti --rm -d \
       -p "0.0.0.0:$port:8080" \
       -v "$PWD/volumes/log_analyzer:/home/user1/log_analyzer/data" \
       --name "$def_cont_name" \
-      log_summarizer-log_analyze:latest
+      log_summarizer-log_analyzer:latest
