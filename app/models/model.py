@@ -22,6 +22,6 @@ class SummarizerMode(str, Enum):
 
 class LogFileType(str, Enum):
     """
-    Log file types
+    Log file types and table names in sql database
     """
-    ANOMALY_DETECTION: str = "anomaly_detection"
+    ANOMALY_DETECTION_LOG: str = "anomaly_detection_log"
