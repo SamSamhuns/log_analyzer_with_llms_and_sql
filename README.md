@@ -8,6 +8,7 @@ Backend with fastapi+uvicorn for log analysis with LLMs.
     - [2. Create shared volumes directory](#2-create-shared-volumes-directory)
   - [Running the log analysis service](#running-the-log-analysis-service)
     - [Option A) Docker Compose](#option-a-docker-compose)
+      - [Note:](#note)
     - [Option B) Docker and local virtual env](#option-b-docker-and-local-virtual-env)
       - [Option Bi) Uvicorn server with fastapi with Docker](#option-bi-uvicorn-server-with-fastapi-with-docker)
       - [Option Bii) Uvicorn server with fastapi with venv](#option-bii-uvicorn-server-with-fastapi-with-venv)
@@ -34,6 +35,11 @@ LANGCHAIN_PROJECT=log_analyzer
 LANGCHAIN_TRACING_V2=true
 LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
 LANGCHAIN_API_KEY=<LANGCHAIN_API_KEY>
+# llm model info
+LLM_MODEL_NAME=llamafile
+# mysql table info
+MYSQL_LOG_ID_TB_NAME=log_fid
+MYSQL_GENERAL_ID_TB_NAME=general_fid
 # mysql mariadb
 MYSQL_HOST=mysql
 MYSQL_PORT=3306
@@ -53,6 +59,7 @@ PMA_PASSWORD=${MYSQL_PASSWORD}
 
 ```shell
 mkdir -p volumes/log_analyzer
+mkdir -p volumes/store
 ```
 
 ## Running the log analysis service
@@ -71,6 +78,18 @@ docker compose up -d
 ```
 
 The server will be available at <http://localhost:8080> if using the default port.
+
+#### Note:
+
+When changing settings in `docker-compose.yaml` for the mongodb service, the existing docker and shared volumes might have to be purged i.e. when changing replicaset name.
+
+<p style="color:red;">WARNING: This will delete all existing user, document, and vector records.</p> 
+
+```shell
+docker-compose down
+docker volume rm $(docker volume ls -q)
+rm -rf volumes/store
+```
 
 ### Option B) Docker and local virtual env
 
