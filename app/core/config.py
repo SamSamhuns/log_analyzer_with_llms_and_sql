@@ -34,6 +34,10 @@ MYSQL_USER = os.getenv("MYSQL_USER", default="user")
 MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", default="pass")
 MYSQL_DATABASE = os.getenv("MYSQL_DATABASE", default="default")
 
+# mysql table info
+MYSQL_LOG_ID_TB_NAME = os.getenv("MYSQL_LOG_ID_TB_NAME", default="log_fid")
+MYSQL_GENERAL_ID_TB_NAME = os.getenv("MYSQL_GENERAL_ID_TB_NAME", default="general_fid")
+
 # logging conf
 log_cfg = LogConfig()
 # override info & error log paths
