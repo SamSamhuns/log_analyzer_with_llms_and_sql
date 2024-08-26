@@ -45,22 +45,3 @@ def gen_log_obj_list(log_file_content: str, logfile_id: str,  logfile_type: str)
         log_obj_list = gen_anomaly_detection_log_obj_list(log_file_content, logfile_id)
 
     return log_obj_list
-
-
-fpath = "/home/user/Main/log_summarizer/reference/$hypervisor-ml-rta-anomaly-detection-srta-q2-demo.log"
-with open(fpath, "r") as f:
-    log_file_content = f.read()
-    log_obj_list = gen_log_obj_list(log_file_content,
-                                    "1234567890", 
-                                    LogFileType.ANOMALY_DETECTION_LOG.value)
-
-    data_dicts = log_obj_list
-    tb_name = LogFileType.ANOMALY_DETECTION_LOG.value
-
-    col_names = ', '.join(data_dicts[0].keys())
-    placeholders = ', '.join(['%s'] * len(data_dicts[0]))
-    query = f"INSERT INTO {tb_name} ({col_names}) VALUES ({placeholders})".replace("'", '')
-
-    # Prepare the list of tuples for insertion
-    values = [tuple(data_dict.values()) for data_dict in data_dicts]
-    breakpoint()
