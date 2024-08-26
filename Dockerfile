@@ -24,7 +24,7 @@ RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Install python dependencies
-RUN pip install pip==24.0
+RUN pip install pip==24.2
 COPY requirements.txt  "$WORKDIR/requirements.txt"
 RUN pip install --no-cache-dir --default-timeout=100 -r "$WORKDIR/requirements.txt"
 
