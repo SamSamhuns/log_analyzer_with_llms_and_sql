@@ -15,7 +15,7 @@ def insert_bulk_data_into_sql(mysql_conn, tb_name, data_dicts: list, commit: boo
     if not data_dicts:
         return {"status": "failed", "message": "No data provided"}
 
-    # Assuming all dictionaries have the same keys, 
+    # Assuming all dictionaries have the same keys,
     # which should be the case for consistent bulk inserts
     col_names = ', '.join(data_dicts[0].keys())
     placeholders = ', '.join(['%s'] * len(data_dicts[0]))
@@ -26,18 +26,19 @@ def insert_bulk_data_into_sql(mysql_conn, tb_name, data_dicts: list, commit: boo
 
     try:
         with mysql_conn.cursor() as cursor:
+            logger.info("Attempting to bulk insert %d records into mysql db.", len(values))
             cursor.executemany(query, values)
             if commit:
                 mysql_conn.commit()
-                logger.info("Bulk records inserted into mysql db.✅️")
-                return {"status": "success", 
+                logger.info("%d records bulk inserted into mysql db.✅️", len(values))
+                return {"status": "success",
                         "message": "Bulk records inserted into mysql db"}
             logger.info("Bulk record insertion waiting to be committed to mysql db.🕓")
-            return {"status": "success", 
+            return {"status": "success",
                     "message": "Bulk record insertion waiting to be committed to mysql db."}
     except pymysql.Error as excep:
         logger.error("%s: mysql bulk record insertion failed ❌", excep)
-        return {"status": "failed", 
+        return {"status": "failed",
                 "message": f"mysql bulk record insertion error: {str(excep)}"}
 
 
@@ -172,10 +173,10 @@ def entries_exist(connection, tb_name: str, conditions: dict, logic: str = 'AND'
         assert logic in {"AND", "OR"}
         with connection.cursor() as cursor:
             # Construct the WHERE clause dynamically based on provided conditions and logic
-            clause = f" {logic} ".join([f"{column} = %s" for column, _ in conditions])
+            clause = f" {logic} ".join([f"{column} = %s" for column in conditions.keys()])
             query = f"SELECT 1 FROM `{tb_name}` WHERE {clause} LIMIT 1"
             # Extract values for the SQL query parameters
-            values = tuple(value for _, value in conditions)
+            values = tuple(value for value in conditions.values())
             cursor.execute(query, values)
             result = cursor.fetchone()
             return result is not None
