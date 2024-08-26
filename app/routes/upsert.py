@@ -48,7 +48,7 @@ async def log_upsert(
     logged_files = []
     try:
         for file in files:
-            f_content = await file.file.read()
+            f_content = file.file.read()
             f_name = file.filename
 
             # check if file alr exists in the db using md5sum
@@ -77,7 +77,7 @@ async def log_upsert(
             response_data["detail"] = f"uploaded and upserted {len(files)} file(s) into the sql table. "
             if len(logged_files) != len(files):
                 response_data["detail"] += f"files {set(f.filename for f in files) -
-                                                        set(logged_files)} were not uploaded"
+                                                    set(logged_files)} were not uploaded"
             response_data["content"] = logged_files
         else:
             response_data["detail"] = "uploaded files could not be uploaded or already exist in system"
@@ -110,13 +110,13 @@ async def file_upsert(
                     SUPPORTED_FILES_EXT} supported. {file.filename} is invalid"
                 raise ValueError(response_data["detail"])
 
-            f_content = await file.file.read()
+            f_content = file.file.read()
             f_name = file.filename
             fmd5 = get_file_md5(f_content)
             if entries_exist(mysql_conn, MYSQL_GENERAL_ID_TB_NAME, {"file_md5": fmd5}):
                 logger.info("%s already stored and indexed in db. Skipping", f_name)
                 continue
-            
+
             # insert log file entry into log_fid table if it didn't exist
             fid_obj = {"file_md5": fmd5,
                        "inserted_date": datetime.now().strftime('%Y-%m-%d'),
@@ -128,9 +128,6 @@ async def file_upsert(
             fsave_path = osp.join(FILE_STORAGE_DIR, doc_id + osp.splitext(f_name)[-1])
             with open(fsave_path, 'wb') as f_write:
                 f_write.write(f_content)
-
-            # insert doc info info into database
-            # doc_obj = {"_id": doc_id, "doc_name": f_name, "doc_md5": fmd5, "doc_path": fsave_path}
 
             f_ext = osp.splitext(f_name)[-1]
             if f_ext == ".pdf":
@@ -150,12 +147,13 @@ async def file_upsert(
             splits = text_splitter.split_documents(docs)
 
             # index doc in vector store
-            _ = Chroma.from_documents(documents=splits, embedding=OpenAIEmbeddings(), persist_directory=VECTOR_STORE_DIR)
+            Chroma.from_documents(documents=splits, embedding=OpenAIEmbeddings(),
+                                  persist_directory=VECTOR_STORE_DIR)
             emb_files.append(f_name)
         if len(emb_files) > 0:
             response_data["detail"] = f"uploaded and embedded {len(emb_files)} file(s). "
             if len(emb_files) != len(files):
-                response_data["detail"] += f"files {set(f.filename for f in files) - 
+                response_data["detail"] += f"files {set(f.filename for f in files) -
                                                     set(emb_files)} were not uploaded"
             response_data["content"] = emb_files
         else:
