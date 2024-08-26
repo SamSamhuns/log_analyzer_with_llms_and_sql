@@ -1,6 +1,6 @@
 -- database and table names are acquired from env variables
-CREATE DATABASE IF NOT EXISTS `log_analysis_db`;
-USE `log_analysis_db`;
+CREATE DATABASE IF NOT EXISTS `default`;
+USE `default`;
 
 -- create general file id table for all supported file types
 CREATE TABLE IF NOT EXISTS `general_fid` (
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS `log_fid` (
 CREATE TABLE IF NOT EXISTS `anomaly_detection_log` (
     ID INT NOT NULL AUTO_INCREMENT,
 
-    log_fid VARCHAR(255) NOT NULL,
+    log_fid VARCHAR(32) NOT NULL,
     timestamp DATE NOT NULL,
     inference_time FLOAT NOT NULL,
     prediction INT NOT NULL,
