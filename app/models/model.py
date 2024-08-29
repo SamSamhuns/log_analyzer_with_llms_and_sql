@@ -3,6 +3,7 @@ API data models
 """
 from pydantic import BaseModel
 from enum import Enum
+from typing import List, Any, Optional
 
 
 class InputModel(BaseModel):
@@ -10,6 +11,11 @@ class InputModel(BaseModel):
     API input model format
     """
     file_path: str
+
+
+class SQLQueryParams(BaseModel):
+    query: str
+    params: Optional[List[Any]] = None
 
 
 class SummarizerMode(str, Enum):
