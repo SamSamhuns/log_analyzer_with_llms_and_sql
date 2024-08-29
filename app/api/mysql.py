@@ -1,10 +1,59 @@
 """
 pymysql api functions
 """
+from typing import List
 import logging
 import pymysql
 
 logger = logging.getLogger('mysql_api')
+
+
+def is_sql_allowed(sql_script: str, restricted_cmds: List = None) -> bool:
+    """
+    Simple validation to check for restricted commands in SQL script.
+    """
+    for command in restricted_cmds:
+        if command in sql_script.upper():
+            return False
+    return True
+
+
+def run_sql_script(mysql_conn, sql_script: str, params: tuple = None, commit: bool = True) -> dict:
+    """
+    Execute an arbitrary SQL script with parameter binding.
+    sql_script: The SQL script to be executed.
+    params: A tuple of optional parameters to be used in the SQL script.
+    commit: Indicates whether changes should be committed.
+
+    Example:
+        {"query": "UPDATE users SET name = %s, email = %s WHERE id = %s",
+        "params": ["Jane Doe", "jane.doe@example.com", 1]}
+    """
+    disabled_cmds = ['DROP', 'DELETE', 'TRUNCATE', 'ALTER']
+    # Check if SQL script is allowed
+    if not is_sql_allowed(sql_script, disabled_cmds):
+        logger.error("Restricted SQL script detected. Execution aborted. ❌")
+        return {"status": "failed",
+                "message": "Restricted SQL script detected. Execution aborted." + \
+                           f"{disabled_cmds} commands are not allowed."}
+
+    try:
+        with mysql_conn.cursor() as cursor:
+            if params:
+                cursor.execute(sql_script, params)
+            else:
+                cursor.execute(sql_script)
+            if commit:
+                mysql_conn.commit()
+                logger.info("SQL script executed successfully and committed to MySQL database. ✅️")
+                return {"status": "success", "message": "SQL script executed and committed successfully."}
+            results = cursor.fetchall()  # Fetch results from a SELECT query
+            logger.info("SQL script executed successfully, fetched results. ✅️")
+            return {"status": "success", "message": "SQL script executed successfully, fetched results.", "data": results}
+    except pymysql.Error as excep:
+        logger.error("%s: SQL script execution failed ❌", excep)
+        return {"status": "failed",
+                "message": f"MySQL script execution error: {excep}"}
 
 
 def insert_bulk_data_into_sql(mysql_conn, tb_name, data_dicts: list, commit: bool = True) -> dict:
