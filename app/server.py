@@ -33,7 +33,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 import core.config as cfg
-from routes import upsert, sql_qa, qa, summarize
+from routes import upsert, qa, summarize, sql
 
 
 def get_application():
@@ -83,7 +83,7 @@ logger = logging.getLogger("log_analyzer_server")
 app = get_application()
 app.include_router(upsert.router, prefix="/upsert", tags=["upsert"])
 app.include_router(qa.router, prefix="/qa", tags=["qa"])
-app.include_router(sql_qa.router, prefix="/sql_qa", tags=["sql_qa"])
+app.include_router(sql.router, prefix="/sql", tags=["sql"])
 app.include_router(summarize.router, prefix="/summarize", tags=["summarize"])
 app.openapi = custom_openapi
 
