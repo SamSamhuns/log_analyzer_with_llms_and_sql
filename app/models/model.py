@@ -1,8 +1,9 @@
 """
 API data models
 """
-from pydantic import BaseModel
 from enum import Enum
+from pydantic import BaseModel
+from abc import ABC, abstractmethod
 from typing import List, Any, Optional
 
 
@@ -31,3 +32,32 @@ class LogFileType(str, Enum):
     Log file types and table names in sql database
     """
     ANOMALY_DETECTION_LOG: str = "anomaly_detection_log"
+
+
+class LogText2SQLConfig(ABC):
+    """
+    log text to sql config
+    """
+    @abstractmethod
+    def table_name(self):
+        pass
+
+    @abstractmethod
+    def table_schema(self):
+        pass
+
+    @abstractmethod
+    def table_examples(self):
+        pass
+
+    @abstractmethod
+    def table_info(self):
+        pass
+
+    @abstractmethod
+    def top_k(self):
+        pass
+
+    @abstractmethod
+    def sql_prompt_template(self):
+        pass
