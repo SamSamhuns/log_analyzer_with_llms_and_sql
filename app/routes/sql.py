@@ -3,12 +3,13 @@ SQL Question Answer api endpoint
 """
 import logging
 import traceback
-from typing import Dict, Optional
+from typing import Dict
 from fastapi import APIRouter, status, HTTPException
 
-from api.mysql import run_sql_script
-from core.setup import mysql_conn
-from models.model import SQLQueryParams
+from api.langchain_custom.text2sql import text_to_sql
+from api.mysql import run_sql_script, sep_query_and_params
+from models.model import SQLQueryParams, LogFileType
+from core.setup import mysql_conn, TEXT2SQL_CFG_DICT
 
 router = APIRouter()
 logger = logging.getLogger('sql_qa_route')
@@ -45,16 +46,39 @@ async def sql_script(
     return response_data
 
 
-@router.post("/qa", response_model=Dict,
+@router.post("/qa/{LogFileType}", response_model=Dict,
              status_code=status.HTTP_200_OK,
              summary="Convert query into sql command & interact with SQL database")
 async def sql_question_answer(
-        query: str):
-    """Converts query into sql comamnd & interact with SQL database"""
+        log_type: LogFileType,
+        question: str):
+    """Converts question into sql comamnd & interact with SQL database"""
     status_code = status.HTTP_200_OK
     response_data = {}
     try:
-        sql_data_response = {"status": "success", "query": query}  # TODO query with langchain + text2sql
+        text2sql_cfg_obj = TEXT2SQL_CFG_DICT[log_type.value]
+        llm_sql_query = text_to_sql(
+            question=question,
+            text2sql_cfg_obj=text2sql_cfg_obj,
+            llm_config={"model": "gpt-4o", "temperature": 0},
+            top_k=text2sql_cfg_obj.top_k)
+
+        query, params = sep_query_and_params(
+            llm_sql_query.replace("\"", ''))
+
+        try:
+            sql_resp = run_sql_script(
+                mysql_conn, query, params, commit=not query.lower().startswith("select"))
+            sql_data_response = {
+                "status": "success",
+                "question": question,
+                "query": llm_sql_query,
+                "response": sql_resp}
+        except Exception as excep:
+            response_data["detail"] = \
+                f"Failed to run SQL query {query} with params {params} in MySQL server: {excep}"
+            raise Exception
+
         response_data = sql_data_response
     except Exception as excep:
         logger.error("%s: %s", excep, traceback.print_exc())
