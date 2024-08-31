@@ -1,11 +1,44 @@
 """
 pymysql api functions
 """
-from typing import List
+from typing import List, Tuple
+import re
 import logging
 import pymysql
 
 logger = logging.getLogger('mysql_api')
+
+
+def sep_query_and_params(query: str) -> Tuple[str, Tuple]:
+    """
+    Prepare a SQL query by replacing numeric and string values with '%s'
+    """
+    # Regular expression to match numeric and string values in the SQL
+    pattern = re.compile(r'(\d+|\'[^\']*\'|\d{4}-\d{2}-\d{2}|\d+\.\d+)')
+
+    # Function to replace each match with '%s'
+    def replace_with_placeholder(match):
+        value = match.group(0)
+        # Try converting to int, float, or keep as string if it has quotes
+        conv_funcs = [int, float]
+        if value.startswith("'") and value.endswith("'"):
+            converted_value = value.strip("'")
+        else:
+            for cfunc in conv_funcs:
+                try:
+                    converted_value = cfunc(value)
+                    break
+                except ValueError:
+                    converted_value = value
+        params.append(converted_value)
+        return "%s"
+
+    # List to store parameters
+    params = []
+    # Replace found values with '%s' and collect them in params
+    query_with_placeholders = pattern.sub(replace_with_placeholder, query)
+
+    return query_with_placeholders, tuple(params)
 
 
 def is_sql_allowed(sql_script: str, restricted_cmds: List = None) -> bool:
