@@ -7,7 +7,7 @@ from models.logging import LogConfig
 from dotenv import load_dotenv
 
 # load environment variables from .env file
-load_dotenv()
+load_dotenv(override=True)
 
 # project information
 PROJECT_NAME: str = "Log Analyzer API template"
