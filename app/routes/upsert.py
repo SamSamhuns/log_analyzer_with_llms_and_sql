@@ -74,14 +74,16 @@ async def log_upsert(
 
             logged_files.append(f_name)
         if len(logged_files) > 0:
-            response_data["detail"] = f"uploaded and upserted {len(files)} file(s) into the sql table. "
+            response_data["status"] = "success"
+            response_data["detail"] = f"uploaded and upserted {len(log_obj_list)} entries " + \
+                f"from {len(files)} file(s) into the sql table. "
             if len(logged_files) != len(files):
                 response_data["detail"] += f"files {set(f.filename for f in files) -
                                                     set(logged_files)} were not uploaded"
             response_data["content"] = logged_files
         else:
-            response_data["detail"] = "uploaded files could not be uploaded or already exist in system"
-            raise ValueError(response_data["detail"])
+            response_data["status"] = "failed"
+            response_data["detail"] = "uploaded file(s) could not be uploaded or already exist in system"
     except Exception as excep:
         logger.error("%s: %s", excep, traceback.print_exc())
         status_code = status.HTTP_400_BAD_REQUEST if status_code == status.HTTP_200_OK else status_code
@@ -151,14 +153,15 @@ async def file_upsert(
                                   persist_directory=VECTOR_STORE_DIR)
             emb_files.append(f_name)
         if len(emb_files) > 0:
+            response_data["status"] = "success"
             response_data["detail"] = f"uploaded and embedded {len(emb_files)} file(s). "
             if len(emb_files) != len(files):
                 response_data["detail"] += f"files {set(f.filename for f in files) -
                                                     set(emb_files)} were not uploaded"
             response_data["content"] = emb_files
         else:
-            response_data["detail"] = "uploaded files could not be uploaded or already exist in system"
-            raise ValueError(response_data["detail"])
+            response_data["status"] = "failed"
+            response_data["detail"] = "uploaded file(s) could not be uploaded or already exist in system"
     except Exception as excep:
         logger.error("%s: %s", excep, traceback.print_exc())
         status_code = status.HTTP_400_BAD_REQUEST if status_code == status.HTTP_200_OK else status_code

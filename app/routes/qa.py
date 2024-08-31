@@ -43,7 +43,8 @@ async def question_answer(
         )
 
         retrieved_docs = rag_chain.invoke(query)["answer"]
-        response_data = {"query": query,
+        response_data = {"status": "success",
+                         "query": query,
                          "retrieved_docs": retrieved_docs}
     except Exception as excep:
         logger.error("%s: %s", excep, traceback.print_exc())

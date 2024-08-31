@@ -36,7 +36,10 @@ async def summarize_files(
                 combined_docs.extend(docs)
             chain = load_summarize_chain(llm, chain_type="stuff")
             summary = chain.invoke(combined_docs)["output_text"]
-            response_data = {"detail": "Combined summarization successful", "summary": summary}
+            response_data = {
+                "status": "success",
+                "detail": "Combined summarization successful",
+                "summary": summary}
         else:
             # Individual summarization logic
             summaries = {}
@@ -46,7 +49,10 @@ async def summarize_files(
                 docs = loader.load()
                 chain = load_summarize_chain(llm, chain_type="stuff")
                 summaries[file.filename] = chain.invoke(docs)["output_text"]
-            response_data = {"detail": "Individual summarization successful", "summaries": summaries}
+            response_data = {
+                "status": "success",
+                "detail": "Individual summarization successful",
+                "summaries": summaries}
     except Exception as excep:
         logger.error("%s: %s", excep, traceback.print_exc())
         detail = "Failed to summarize file contents in server"
@@ -69,7 +75,7 @@ async def summarize_urls(
         summary = chain.invoke(docs)["output_text"]
 
         # run summarization api
-        summarization_results = {"Summary": summary}
+        summarization_results = {"status": "success", "summary": summary}
         response_data = summarization_results
     except Exception as excep:
         logger.error("%s: %s", excep, traceback.print_exc())

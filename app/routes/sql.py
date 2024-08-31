@@ -36,7 +36,7 @@ async def sql_script(
         query, params = request_data.query, request_data.params
         sql_resp = run_sql_script(
             mysql_conn, query, params, commit=not query.lower().startswith("select"))
-        response_data = {"query": query, "params": params} | sql_resp
+        response_data = {"status": "success", "query": query, "params": params} | sql_resp
     except Exception as excep:
         logger.error("%s: %s", excep, traceback.print_exc())
         status_code = status.HTTP_400_BAD_REQUEST if status_code == status.HTTP_200_OK else status_code
@@ -54,7 +54,7 @@ async def sql_question_answer(
     status_code = status.HTTP_200_OK
     response_data = {}
     try:
-        sql_data_response = {"query": query}  # TODO query with langchain + text2sql
+        sql_data_response = {"status": "success", "query": query}  # TODO query with langchain + text2sql
         response_data = sql_data_response
     except Exception as excep:
         logger.error("%s: %s", excep, traceback.print_exc())
