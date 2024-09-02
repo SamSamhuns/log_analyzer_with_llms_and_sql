@@ -10,10 +10,10 @@ from app.api.log_format.log_parser import(
     gen_log_obj_list)
 
 
-def test_gen_anomaly_detection_log_obj_list_valid_from_file(mock_one_anomaly_detection_log_file_content):
+def test_gen_anomaly_detection_log_obj_list_valid_from_file(mock_one_anomaly_det_log_file_path_and_content):
     """Test the gen_anomaly_detection_log_obj_list function with valid input from log file"""
     logfile_id = "12345"
-    _, content = mock_one_anomaly_detection_log_file_content
+    _, content = mock_one_anomaly_det_log_file_path_and_content
     enc = json.detect_encoding(content)
     file_content_str = content.decode(enc)
     result = gen_anomaly_detection_log_obj_list(file_content_str, logfile_id)

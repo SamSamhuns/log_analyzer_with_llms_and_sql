@@ -110,7 +110,7 @@ def mock_invalid_anomaly_det_log_str():
 
 
 @pytest.fixture(scope="session")
-def mock_one_anomaly_detection_log_file_content():
+def mock_one_anomaly_det_log_file_path_and_content():
     """
     load and return an anomaly detection log file
     """
