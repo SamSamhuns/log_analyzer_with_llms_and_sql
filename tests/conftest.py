@@ -73,9 +73,10 @@ def test_mysql_connec():
 
 
 @pytest.fixture(scope="session")
-def gen_mock_data():
+def gen_mock_anomaly_det_log_data():
     """
-    returns a func to create a data dict for testing with anomaly_detection_log
+    returns a func to create a data dict 
+    for testing with anomaly_detection_log
     """
     def _gen_data(fid: int = -1):
         test_data = {
@@ -90,7 +91,26 @@ def gen_mock_data():
 
 
 @pytest.fixture(scope="session")
-def mock_one_anomaly_detection_log_file():
+def mock_valid_anomaly_det_log_str():
+    """Generate valid anomaly det log str"""
+    return """
+    2024-01-01T12:00:00Z, 100ms, 1
+    2024-01-01T13:00:00Z, 200ms, 0
+    """
+
+
+@pytest.fixture(scope="session")
+def mock_invalid_anomaly_det_log_str():
+    """Generate anomaly det log str 
+    with one valid and one invalid line"""
+    return """
+    2024-01-01 12:00:00, 100ms, 1
+    2024-01-01T13:00:00Z, xyz ms, 0
+    """
+
+
+@pytest.fixture(scope="session")
+def mock_one_anomaly_detection_log_file_content():
     """
     load and return an anomaly detection log file
     """
