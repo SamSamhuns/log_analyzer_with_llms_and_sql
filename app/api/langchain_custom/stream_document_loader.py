@@ -1,3 +1,4 @@
+import asyncio
 from typing import Iterator, AsyncIterator
 from io import StringIO
 
@@ -31,14 +32,18 @@ class CustomStreamDocumentLoader(BaseLoader):
         self.file_stream.close()
 
     async def alazy_load(self) -> AsyncIterator[Document]:
-        """An async lazy loader that reads from a file stream line by line asynchronously."""
+        """
+        An async lazy loader that reads from a file stream line by line asynchronously.
+        WARNING; This is just simulating asynchronous behavior.
+        """
         line_number = 0
-        line = await self.file_stream.readline()
+        line = self.file_stream.readline()
         while line:
+            await asyncio.sleep(0)  # simulate asynchronous behavior
             yield Document(
                 page_content=line,
                 metadata={"line_number": line_number, "source": "stream"},
             )
             line_number += 1
-            line = await self.file_stream.readline()
+            line = self.file_stream.readline()
         self.file_stream.close()
