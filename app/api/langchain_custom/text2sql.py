@@ -17,7 +17,8 @@ def text_to_sql(
         question: str,
         text2sql_cfg_obj: object,
         llm_config: dict,
-        top_k: int = 5) -> str:
+        top_k: int = 5,
+        verbose: bool = True) -> str:
     """
     Convert plain text to sql using LLM
     Parameters:
@@ -37,7 +38,7 @@ def text_to_sql(
     text2sql_model = ChatOpenAI(
         model=llm_config["model"],
         temperature=llm_config["temperature"],
-        verbose=True,
+        verbose=verbose,
         ).with_structured_output(SQLResponse)
     text2sql_runnable = text2sql_prompt.partial(
         table_info=text2sql_cfg_obj.table_info, top_k=top_k) | text2sql_model
