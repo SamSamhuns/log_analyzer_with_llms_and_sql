@@ -1,6 +1,5 @@
 """
-Test milvus api
-The milvus server must be running in the appropriate port 
+Test log format api
 """
 import json
 import pytest

@@ -1,6 +1,5 @@
 """
-Test redis api
-The redis server must be running in the appropriate port
+Test stream document loader api
 """
 import json
 import pytest
