@@ -14,7 +14,8 @@ Backend with fastapi+uvicorn for log analysis with LLMs.
       - [Option Bii) Uvicorn server with fastapi with venv](#option-bii-uvicorn-server-with-fastapi-with-venv)
     - [Optionally expose app through ngrok docker for sharing localhost on the internet](#optionally-expose-app-through-ngrok-docker-for-sharing-localhost-on-the-internet)
   - [Testing](#testing)
-  - [TODO](#todo)
+  - [For Developers](#for-developers)
+    - [To change schema of tables](#to-change-schema-of-tables)
 
 ## Setup
 
@@ -167,7 +168,14 @@ coverage run -m pytest tests/
 coverage report -m -i
 ```
 
-## TODO
+## For Developers
 
--   Fix vector database to use
--   Use redis for caching if possible
+### To change schema of tables
+
+The following files must be edited.
+
+-   Edit/add to `init.sql` for changing/adding log table schema
+-   Edit/add to `app/api/log_format/log_parser.py` for parsing logs
+-   Edit/add to `app/core.setup.py` for adding table schema and data sample info
+-   Edit/add to `tests/conftests.py` for setting the correct values for the test database
+-   Edit/add to `tests/api/test_mysql_api.py` for setting the correct values for the test database
