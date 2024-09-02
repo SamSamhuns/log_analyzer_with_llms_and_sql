@@ -173,6 +173,9 @@ cython_debug/
 # ignore .docker files
 .docker
 
+# ignore sample anomaly_detection_log file
+!tests/static/sample_anomaly_detection.log
+
 # ignore server volume dir
 volumes
 
