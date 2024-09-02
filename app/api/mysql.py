@@ -11,33 +11,30 @@ logger = logging.getLogger('mysql_api')
 
 def sep_query_and_params(query: str) -> Tuple[str, Tuple]:
     """
-    Prepare a SQL query by replacing numeric and string values with '%s'
+    Prepare a SQL query by replacing numeric and string values with '%s'.
+    Correctly handles integers, floating-point numbers, strings in single quotes, and date formats.
+    This version ensures that full strings within quotes are not parsed or altered,
+    which prevents incorrect separations of literal strings.
     """
-    # Regular expression to match numeric and string values in the SQL
-    pattern = re.compile(r'(\d+|\'[^\']*\'|\d{4}-\d{2}-\d{2}|\d+\.\d+)')
+    # Regular expression to match floating point numbers, integers, quoted strings, and dates
+    # Also ignores the interiors of quoted strings
+    pattern = re.compile(r"'\d{4}-\d{2}-\d{2}'|'\d+\.\d+'|'\d+'|'.+?'|\d+\.\d+|\d+")
 
-    # Function to replace each match with '%s'
     def replace_with_placeholder(match):
         value = match.group(0)
-        # Try converting to int, float, or keep as string if it has quotes
-        conv_funcs = [int, float]
+        # Handling for quoted strings and numbers
         if value.startswith("'") and value.endswith("'"):
-            converted_value = value.strip("'")
+            converted_value = value[1:-1]  # Remove the surrounding quotes
         else:
-            for cfunc in conv_funcs:
-                try:
-                    converted_value = cfunc(value)
-                    break
-                except ValueError:
-                    converted_value = value
+            try:
+                converted_value = float(value) if '.' in value else int(value)
+            except ValueError:
+                converted_value = value  # Leave as is if it's not a recognized numeric format
         params.append(converted_value)
         return "%s"
 
-    # List to store parameters
     params = []
-    # Replace found values with '%s' and collect them in params
     query_with_placeholders = pattern.sub(replace_with_placeholder, query)
-
     return query_with_placeholders, tuple(params)
 
 
@@ -82,7 +79,9 @@ def run_sql_script(mysql_conn, sql_script: str, params: tuple = None, commit: bo
                 return {"status": "success", "message": "SQL script executed and committed successfully."}
             results = cursor.fetchall()  # Fetch results from a SELECT query
             logger.info("SQL script executed successfully, fetched results. ✅️")
-            return {"status": "success", "message": "SQL script executed successfully, fetched results.", "data": results}
+            return {"status": "success",
+                    "message": "SQL script executed successfully, fetched results.", 
+                    "data": results}
     except pymysql.Error as excep:
         logger.error("%s: SQL script execution failed ❌", excep)
         return {"status": "failed",
@@ -164,7 +163,7 @@ def select_data_from_sql_with_id(mysql_conn, tb_name, data_id: int) -> dict:
             if data is None:
                 logger.warning("mysql record with id: %s does not exist ❌.", data_id)
                 return {"status": "failed",
-                        "message": "mysql record with id: {data_id} does not exist"}
+                        "message": f"mysql record with id: {data_id} does not exist"}
             logger.info("Data with id: %s retrieved from mysql db.✅️", data_id)
             return {"status": "success",
                     "message": f"record matching id: {data_id} retrieved from mysql db",
@@ -240,7 +239,7 @@ def table_exists(mysql_conn, tb_name: str) -> bool:
         return False
 
 
-def entries_exist(connection, tb_name: str, conditions: dict, logic: str = 'AND'):
+def entries_exist(connection, tb_name: str, conditions: dict, logic: str = 'AND') -> bool:
     """
     CHeck if entries exist in a table
     Example use:
