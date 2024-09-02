@@ -50,33 +50,33 @@ def test_check_table_existence(test_mysql_connec: Connection):
 
 
 @pytest.mark.order(before="test_select_sql")
-def test_insert_sql(test_mysql_connec: Connection, gen_mock_data: Callable):
+def test_insert_sql(test_mysql_connec: Connection, gen_mock_anomaly_det_log_data: Callable):
     """Inserts test data into MySQL database."""
     resp = insert_data_into_sql(
-        test_mysql_connec, MYSQL_TEST_TABLE, gen_mock_data(MYSQL_TEST_ID))
+        test_mysql_connec, MYSQL_TEST_TABLE, gen_mock_anomaly_det_log_data(MYSQL_TEST_ID))
 
     assert resp == {"status": "success",
                     "message": "record inserted into mysql db"}
 
 
 @pytest.mark.order(before="test_delete_sql")
-def test_select_sql(test_mysql_connec: Connection, gen_mock_data: Callable):
+def test_select_sql(test_mysql_connec: Connection, gen_mock_anomaly_det_log_data: Callable):
     """Selects test` data from MySQL database."""
     resp = select_data_from_sql_with_id(
         test_mysql_connec, MYSQL_TEST_TABLE, MYSQL_TEST_ID)
     assert resp == {"status": "success",
                     "message": f"record matching id: {MYSQL_TEST_ID} retrieved from mysql db",
-                    "data": gen_mock_data(MYSQL_TEST_ID)}
+                    "data": gen_mock_anomaly_det_log_data(MYSQL_TEST_ID)}
 
 
 @pytest.mark.order(before="test_delete_sql")
-def test_select_all_sql(test_mysql_connec, gen_mock_data):
+def test_select_all_sql(test_mysql_connec, gen_mock_anomaly_det_log_data):
     """Selects test data from MySQL database."""
     resp = select_all_data_from_sql(
         test_mysql_connec, MYSQL_TEST_TABLE)
     assert resp == {"status": "success",
                     "message": "All records retrieved from mysql db",
-                    "data": [gen_mock_data(MYSQL_TEST_ID)]}
+                    "data": [gen_mock_anomaly_det_log_data(MYSQL_TEST_ID)]}
 
 
 def test_delete_mysql(test_mysql_connec: Connection):
@@ -87,12 +87,12 @@ def test_delete_mysql(test_mysql_connec: Connection):
                     "message": "record deleted from mysql db"}
 
 
-def test_insert_bulk_data_into_sql(test_mysql_connec: Connection, gen_mock_data: Callable):
+def test_insert_bulk_data_into_sql(test_mysql_connec: Connection, gen_mock_anomaly_det_log_data: Callable):
     """Test bulk insert data"""
     bulk_data = [
-        gen_mock_data(MYSQL_TEST_ID - 1),
-        gen_mock_data(MYSQL_TEST_ID - 2),
-        gen_mock_data(MYSQL_TEST_ID - 3),
+        gen_mock_anomaly_det_log_data(MYSQL_TEST_ID - 1),
+        gen_mock_anomaly_det_log_data(MYSQL_TEST_ID - 2),
+        gen_mock_anomaly_det_log_data(MYSQL_TEST_ID - 3),
     ]
     response = insert_bulk_data_into_sql(test_mysql_connec, MYSQL_TEST_TABLE, bulk_data)
     assert response["status"] == "success"
