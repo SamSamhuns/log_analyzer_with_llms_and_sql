@@ -1,4 +1,4 @@
-name: Python Face Registration & Recognition Test CI
+name: LLM log analyzer and SQL Test CI
 
 on:
   push:
@@ -79,12 +79,12 @@ jobs:
             touch .env
             echo DEBUG_LEVEL=DEBUG >> .env
             echo API_SERVER_PORT=8081 >> .env
-            echo OPENAI_API_KEY=<OPENAI_API_KEY> >> .env
+            echo OPENAI_API_KEY=[OPENAI_API_KEY] >> .env
             echo USER_AGENT=log_analyzer >> .env
             echo LANGCHAIN_PROJECT=log_analyzer >> .env
             echo LANGCHAIN_TRACING_V2=true >> .env
             echo LANGCHAIN_ENDPOINT=https://api.smith.langchain.com >> .env
-            echo LANGCHAIN_API_KEY=<LANGCHAIN_API_KEY> >> .env
+            echo LANGCHAIN_API_KEY=[LANGCHAIN_API_KEY] >> .env
             echo LLM_MODEL_NAME=llamafile >> .env
             echo MYSQL_LOG_ID_TB_NAME=log_fid >> .env
             echo MYSQL_GENERAL_ID_TB_NAME=general_fid >> .env
