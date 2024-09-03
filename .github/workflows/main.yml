@@ -85,8 +85,6 @@ jobs:
             echo LANGCHAIN_TRACING_V2=true >> .env
             echo LANGCHAIN_ENDPOINT=https://api.smith.langchain.com >> .env
             echo LANGCHAIN_API_KEY=[LANGCHAIN_API_KEY] >> .env
-            echo MYSQL_LOG_ID_TB_NAME=log_fid >> .env
-            echo MYSQL_GENERAL_ID_TB_NAME=general_fid >> .env
             echo MYSQL_HOST=mysql >> .env
             echo MYSQL_PORT=3306 >> .env
             echo MYSQL_USER=user >> .env
