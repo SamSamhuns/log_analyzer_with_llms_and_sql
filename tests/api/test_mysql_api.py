@@ -4,8 +4,8 @@ The mysql server must be running in the appropriate port
 """
 from typing import Callable
 import pytest
-from tests.conftest import MYSQL_TEST_ANOMALY_DET_LOG_TABLE, MYSQL_TEST_ID
 from pymysql.connections import Connection
+from tests.conftest import MYSQL_TEST_ANOMALY_DET_LOG_TABLE, MYSQL_TEST_ID
 
 from app.api.mysql import (
     sep_query_and_params,
