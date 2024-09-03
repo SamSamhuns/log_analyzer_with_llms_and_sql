@@ -78,8 +78,8 @@ async def log_upsert(
             response_data["detail"] = f"uploaded and upserted {len(log_obj_list)} entries " + \
                 f"from {len(files)} file(s) into the sql table. "
             if len(logged_files) != len(files):
-                response_data["detail"] += f"files {set(f.filename for f in files) -
-                                                    set(logged_files)} were not uploaded"
+                response_data["detail"] += \
+                    f"files {set(f.filename for f in files) - set(logged_files)} were not uploaded"
             response_data["content"] = logged_files
         else:
             response_data["status"] = "failed"
