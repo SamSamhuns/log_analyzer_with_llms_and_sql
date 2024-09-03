@@ -8,8 +8,8 @@ from fastapi import APIRouter, File, UploadFile, status, HTTPException
 from langchain.chains.summarize import load_summarize_chain
 from langchain_community.document_loaders import WebBaseLoader
 
-from models.model import SummarizerMode
-from api.langchain_custom.llms import llm
+from models.model import SummarizerMode, LLMModel
+from api.langchain_custom.llms import load_llm
 from api.langchain_custom.stream_document_loader import CustomStreamDocumentLoader
 
 router = APIRouter()
@@ -21,11 +21,13 @@ logger = logging.getLogger('summarize_route')
              summary="Summarize uploaded file(s)")
 async def summarize_files(
         summarizer_mode: SummarizerMode,
+        model: LLMModel = LLMModel.Llamafile.value,
         files: List[UploadFile] = File(...),):
     """Extract text from files and summarize based on selected mode"""
     response_data = {}
     try:
         print(f"Running summarization for files: {[file.filename for file in files]}")
+        llm = load_llm(model)
         if summarizer_mode == "combined":
             # Combined summarization logic
             combined_docs = []

@@ -11,8 +11,9 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 
-from api.langchain_custom.llms import llm
+from api.langchain_custom.llms import load_llm
 from core.config import VECTOR_STORE_DIR
+from models.model import LLMModel
 
 
 router = APIRouter()
@@ -23,7 +24,8 @@ logger = logging.getLogger('qa_route')
              status_code=status.HTTP_200_OK,
              summary="Extract query emb, find most similar embs from vector db & answer query with chatbot")
 async def question_answer(
-        query: str):
+        query: str,
+        model: LLMModel = LLMModel.Llamafile.value):
     """Extract query emb, find most similar embs from vector db & answer query with chatbot"""
     status_code = status.HTTP_200_OK
     response_data = {}
@@ -38,7 +40,7 @@ async def question_answer(
         rag_chain = (
             {"context": retriever | format_docs, "question": RunnablePassthrough()}
             | prompt
-            | llm
+            | load_llm(model)
             | StrOutputParser()
         )
 
