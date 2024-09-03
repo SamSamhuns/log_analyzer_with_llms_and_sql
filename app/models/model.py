@@ -36,7 +36,7 @@ class LogFileType(str, Enum):
 
 class LLMModel(Enum):
     """
-    LLM Model Types, currently only lits openai models
+    LLM Model Types
     """
     GPT_3: str = "gpt-3"
     GPT_4: str = "gpt-4"
@@ -44,6 +44,8 @@ class LLMModel(Enum):
     GPT_4_Turbo: str = "gpt-4-turbo"
     GPT_4o: str = "gpt-4o"
     GPT_4o_Mini: str = "gpt-4o-mini"
+    # most be locally hosted in the same env as the server
+    Llamafile: str = "llamafile"
 
 
 class LogText2SQLConfig(ABC):
