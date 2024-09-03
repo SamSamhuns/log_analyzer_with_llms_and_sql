@@ -153,10 +153,10 @@ async def file_upsert(
             emb_files.append(f_name)
         if len(emb_files) > 0:
             response_data["status"] = "success"
-            response_data["detail"] = f"uploaded and embedded {len(emb_files)} file(s). "
+            response_data["detail"] = f"uploaded and embedded {len(emb_files)} file(s)."
             if len(emb_files) != len(files):
-                response_data["detail"] += f"files {set(f.filename for f in files) -
-                                                    set(emb_files)} were not uploaded"
+                response_data["detail"] += \
+                    f"files {set(f.filename for f in files) - set(emb_files)} were not uploaded"
             response_data["content"] = emb_files
         else:
             response_data["status"] = "failed"
