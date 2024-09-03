@@ -39,9 +39,6 @@ MYSQL_DATABASE = os.getenv("MYSQL_DATABASE", default="default")
 MYSQL_LOG_ID_TB_NAME = os.getenv("MYSQL_LOG_ID_TB_NAME", default="log_fid")
 MYSQL_GENERAL_ID_TB_NAME = os.getenv("MYSQL_GENERAL_ID_TB_NAME", default="general_fid")
 
-# llm model info
-LLM_MODEL_NAME = os.getenv("LLM_MODEL_NAME", default="llamafile")
-
 # logging conf
 log_cfg = LogConfig()
 # override info & error log paths

@@ -41,8 +41,6 @@ LANGCHAIN_PROJECT=log_analyzer
 LANGCHAIN_TRACING_V2=true
 LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
 LANGCHAIN_API_KEY=<LANGCHAIN_API_KEY>
-# llm model info
-LLM_MODEL_NAME=llamafile
 # mysql table info
 MYSQL_LOG_ID_TB_NAME=log_fid
 MYSQL_GENERAL_ID_TB_NAME=general_fid
