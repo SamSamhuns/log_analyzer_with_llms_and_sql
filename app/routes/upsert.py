@@ -107,8 +107,8 @@ async def file_upsert(
         for file in files:
             file_ext = os.path.splitext(file.filename)[1]
             if file_ext not in SUPPORTED_FILES_EXT:
-                response_data["detail"] = f"Only files with extensions {
-                    SUPPORTED_FILES_EXT} supported. {file.filename} is invalid"
+                response_data["detail"] = \
+                    f"Only files with extensions {SUPPORTED_FILES_EXT} supported. {file.filename} is invalid"
                 raise ValueError(response_data["detail"])
 
             f_content = file.file.read()
