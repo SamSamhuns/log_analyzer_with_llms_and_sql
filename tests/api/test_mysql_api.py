@@ -4,7 +4,7 @@ The mysql server must be running in the appropriate port
 """
 from typing import Callable
 import pytest
-from tests.conftest import MYSQL_TEST_TABLE, MYSQL_TEST_ID
+from tests.conftest import MYSQL_TEST_ANOMALY_DET_LOG_TABLE, MYSQL_TEST_ID
 from pymysql.connections import Connection
 
 from app.api.mysql import (
@@ -44,8 +44,8 @@ def test_sep_query_and_params(query, expected_output):
 
 
 def test_check_table_existence(test_mysql_connec: Connection):
-    """Check if the MYSQL_TEST_TABLE table exists"""
-    exists = table_exists(test_mysql_connec, MYSQL_TEST_TABLE)
+    """Check if the MYSQL_TEST_ANOMALY_DET_LOG_TABLE table exists"""
+    exists = table_exists(test_mysql_connec, MYSQL_TEST_ANOMALY_DET_LOG_TABLE)
     assert exists is True
 
 
@@ -53,7 +53,7 @@ def test_check_table_existence(test_mysql_connec: Connection):
 def test_insert_sql(test_mysql_connec: Connection, gen_mock_anomaly_det_log_data: Callable):
     """Inserts test data into MySQL database."""
     resp = insert_data_into_sql(
-        test_mysql_connec, MYSQL_TEST_TABLE, gen_mock_anomaly_det_log_data(MYSQL_TEST_ID))
+        test_mysql_connec, MYSQL_TEST_ANOMALY_DET_LOG_TABLE, gen_mock_anomaly_det_log_data(MYSQL_TEST_ID))
 
     assert resp == {"status": "success",
                     "message": "record inserted into mysql db"}
@@ -63,7 +63,7 @@ def test_insert_sql(test_mysql_connec: Connection, gen_mock_anomaly_det_log_data
 def test_select_sql(test_mysql_connec: Connection, gen_mock_anomaly_det_log_data: Callable):
     """Selects test` data from MySQL database."""
     resp = select_data_from_sql_with_id(
-        test_mysql_connec, MYSQL_TEST_TABLE, MYSQL_TEST_ID)
+        test_mysql_connec, MYSQL_TEST_ANOMALY_DET_LOG_TABLE, MYSQL_TEST_ID)
     assert resp == {"status": "success",
                     "message": f"record matching id: {MYSQL_TEST_ID} retrieved from mysql db",
                     "data": gen_mock_anomaly_det_log_data(MYSQL_TEST_ID)}
@@ -73,7 +73,7 @@ def test_select_sql(test_mysql_connec: Connection, gen_mock_anomaly_det_log_data
 def test_select_all_sql(test_mysql_connec, gen_mock_anomaly_det_log_data):
     """Selects test data from MySQL database."""
     resp = select_all_data_from_sql(
-        test_mysql_connec, MYSQL_TEST_TABLE)
+        test_mysql_connec, MYSQL_TEST_ANOMALY_DET_LOG_TABLE)
     assert resp == {"status": "success",
                     "message": "All records retrieved from mysql db",
                     "data": [gen_mock_anomaly_det_log_data(MYSQL_TEST_ID)]}
@@ -82,7 +82,7 @@ def test_select_all_sql(test_mysql_connec, gen_mock_anomaly_det_log_data):
 def test_delete_mysql(test_mysql_connec: Connection):
     """Deletes test data from MySQL database."""
     resp = delete_data_from_sql_with_id(
-        test_mysql_connec, MYSQL_TEST_TABLE, MYSQL_TEST_ID)
+        test_mysql_connec, MYSQL_TEST_ANOMALY_DET_LOG_TABLE, MYSQL_TEST_ID)
     assert resp == {"status": "success",
                     "message": "record deleted from mysql db"}
 
@@ -94,7 +94,7 @@ def test_insert_bulk_data_into_sql(test_mysql_connec: Connection, gen_mock_anoma
         gen_mock_anomaly_det_log_data(MYSQL_TEST_ID - 2),
         gen_mock_anomaly_det_log_data(MYSQL_TEST_ID - 3),
     ]
-    response = insert_bulk_data_into_sql(test_mysql_connec, MYSQL_TEST_TABLE, bulk_data)
+    response = insert_bulk_data_into_sql(test_mysql_connec, MYSQL_TEST_ANOMALY_DET_LOG_TABLE, bulk_data)
     assert response["status"] == "success"
     assert "Bulk records inserted into mysql db" in response["message"]
 
@@ -107,13 +107,13 @@ def test_insert_bulk_data_into_sql(test_mysql_connec: Connection, gen_mock_anoma
 ])
 def test_entry_existence(test_mysql_connec: Connection, test_input: dict, expected: bool):
     """Test for specific entries existence"""
-    assert entries_exist(test_mysql_connec, MYSQL_TEST_TABLE, test_input) == expected
+    assert entries_exist(test_mysql_connec, MYSQL_TEST_ANOMALY_DET_LOG_TABLE, test_input) == expected
 
 
 @pytest.mark.order(after="test_insert_bulk_data_into_sql")
 def test_select_all_data_from_table_after_bulk_insert(test_mysql_connec: Connection):
     """Retrieve all data after bulk insertion"""
-    response = select_all_data_from_sql(test_mysql_connec, MYSQL_TEST_TABLE)
+    response = select_all_data_from_sql(test_mysql_connec, MYSQL_TEST_ANOMALY_DET_LOG_TABLE)
     assert response["status"] == "success"
     assert len(response["data"]) >= 3  # Expect at least three records from the bulk insert
 
@@ -121,7 +121,7 @@ def test_select_all_data_from_table_after_bulk_insert(test_mysql_connec: Connect
 @pytest.mark.order(after="test_insert_bulk_data_into_sql")
 def test_run_update_sql_script(test_mysql_connec: Connection):
     """Update a record and check the changes"""
-    update_script = f"UPDATE {MYSQL_TEST_TABLE} SET prediction = %s WHERE ID = %s"
+    update_script = f"UPDATE {MYSQL_TEST_ANOMALY_DET_LOG_TABLE} SET prediction = %s WHERE ID = %s"
     params = (100, MYSQL_TEST_ID - 1)  # Change prediction for ID MYSQL_TEST_ID - 1
     response = run_sql_script(test_mysql_connec, update_script, params)
     assert response["status"] == "success"
@@ -132,9 +132,9 @@ def test_run_update_sql_script(test_mysql_connec: Connection):
 def test_run_select_sql_script_after_update(test_mysql_connec: Connection):
     """Test running a select SQL script after updates to id hav been made"""
     resp1 = select_data_from_sql_with_id(
-        test_mysql_connec, MYSQL_TEST_TABLE, MYSQL_TEST_ID - 1)
+        test_mysql_connec, MYSQL_TEST_ANOMALY_DET_LOG_TABLE, MYSQL_TEST_ID - 1)
 
-    update_script = f"SELECT * FROM {MYSQL_TEST_TABLE} WHERE ID = %s"
+    update_script = f"SELECT * FROM {MYSQL_TEST_ANOMALY_DET_LOG_TABLE} WHERE ID = %s"
     params = (MYSQL_TEST_ID - 1,)
     resp2 = run_sql_script(test_mysql_connec, update_script, params, commit=False)
 
