@@ -66,21 +66,29 @@ def test_mysql_connec():
         cursorclass=DictCursor
     )
     # create test tables if not present & purge all existing data
+    print("Creating test tables based on existing table schemas")
     for orig_tb, test_tb in zip(
             [ANOMALY_DETECTION_LOG_TEXT2SQL_CFG.table_name, MYSQL_LOG_ID_TB_NAME, MYSQL_GENERAL_ID_TB_NAME],
             [MYSQL_TEST_ANOMALY_DET_LOG_TABLE, MYSQL_TEST_LOG_ID_TB_NAME, MYSQL_TEST_GENERAL_ID_TB_NAME]
             ):
-        with mysql_conn.cursor() as cursor:
-            cursor.execute(f"CREATE TABLE IF NOT EXISTS {test_tb} LIKE {orig_tb};")
-            cursor.execute(f"DELETE FROM {test_tb};")
-        mysql_conn.commit()
+        try:
+            with mysql_conn.cursor() as cursor:
+                cursor.execute(f"CREATE TABLE IF NOT EXISTS {test_tb} LIKE {orig_tb};")
+                cursor.execute(f"DELETE FROM {test_tb};")
+            mysql_conn.commit()
+        except Exception as e:
+            mysql_conn.rollback()
+            raise e
     yield mysql_conn
     # drop tables in teardown
     print("Tearing mysql connection")
     for test_tb in [MYSQL_TEST_ANOMALY_DET_LOG_TABLE, MYSQL_TEST_LOG_ID_TB_NAME, MYSQL_TEST_GENERAL_ID_TB_NAME]:
-        with mysql_conn.cursor() as cursor:
-            cursor.execute(f"DROP TABLE {test_tb}")
-        mysql_conn.commit()
+        try:
+            with mysql_conn.cursor() as cursor:
+                cursor.execute(f"DROP TABLE {test_tb}")
+            mysql_conn.commit()
+        except Exception:
+            pass
     mysql_conn.close()
 
 
