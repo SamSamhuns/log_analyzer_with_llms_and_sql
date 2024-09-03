@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04]
-        python: ["3.9", "3.10", "3.11", "3.12"]
+        python: ["3.10", "3.11", "3.12"]
 
     steps:
       - name: Checkout repository
@@ -85,7 +85,6 @@ jobs:
             echo LANGCHAIN_TRACING_V2=true >> .env
             echo LANGCHAIN_ENDPOINT=https://api.smith.langchain.com >> .env
             echo LANGCHAIN_API_KEY=[LANGCHAIN_API_KEY] >> .env
-            echo LLM_MODEL_NAME=llamafile >> .env
             echo MYSQL_LOG_ID_TB_NAME=log_fid >> .env
             echo MYSQL_GENERAL_ID_TB_NAME=general_fid >> .env
             echo MYSQL_HOST=mysql >> .env
@@ -106,7 +105,7 @@ jobs:
 
       - name: Build Docker Compose services
         run: |
-            docker compose -f docker-compose.yml build
+            docker compose build
             docker image prune -f
 
       - name: Start Docker Compose & trt server services
@@ -114,7 +113,7 @@ jobs:
             mkdir -p volumes/log_analyzer
             mkdir -p volumes/store
             set -o allexport && source .env && set +o allexport
-            docker compose -f docker-compose.yml up -d mysql
+            docker compose up -d mysql
             sleep 5
 
       - name: Run PyTest
@@ -123,4 +122,4 @@ jobs:
           pytest tests
 
       - name: Stop Docker Compose services
-        run: docker compose -f docker-compose.yml down
+        run: docker compose down
