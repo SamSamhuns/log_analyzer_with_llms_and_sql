@@ -40,7 +40,7 @@ async def log_upsert(
         log_type: LogFileType,
         files: List[UploadFile] = File(...)):
     """
-    Extract info from log files and store them in a sql database
+    Extract info from log file(s) and store them in a sql database
     """
     status_code = status.HTTP_200_OK
     logfile_type = log_type.value
@@ -94,12 +94,11 @@ async def log_upsert(
 
 @router.post("/files", response_model=Dict,
              status_code=status.HTTP_200_OK,
-             summary="Extract text from ['.txt', '.pdf'] file & save emb in a vector db")
+             summary="Extract text from file(s) & save emb in a vector db")
 async def file_upsert(
         files: List[UploadFile] = File(...)):
     """
-    Extract text from ['.txt', '.pdf'] file & save emb in a vector db
-    TODO: add json, pdf support, should add support for other types of files as well i.e. code files
+    Extract text from file(s) & save emb in a vector db
     """
     status_code = status.HTTP_200_OK
     response_data = {}
