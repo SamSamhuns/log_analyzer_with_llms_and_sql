@@ -3,14 +3,16 @@ Test configurations
 """
 import os
 import sys
+from io import BytesIO
 from datetime import date
+from typing import Callable
 
 import pytest
 import pytest_asyncio
-from httpx import AsyncClient
 import pymysql
 from pymysql.cursors import DictCursor
-
+from httpx import AsyncClient
+from fastapi import UploadFile
 sys.path.append("app")
 
 # custom test settings
@@ -123,4 +125,35 @@ def mock_file_url():
     """
     returns an anomaly detection log file url
     """
-    return "https://raw.githubusercontent.com/SamSamhuns/log_analyzer/master/tests/static/sample_anomaly_detection.log"
+    return "https://raw.githubusercontent.com/SamSamhuns/face_registration_and_recognition_milvus/master/README.md"
+
+
+@pytest.fixture
+def gen_mock_upload_file() -> Callable:
+    """Mock UploadFile"""
+    def _gen_uploadfile(fname: str = "sample.log"):
+        return UploadFile(
+            filename=fname,
+            file=BytesIO(b"example content"))
+    return _gen_uploadfile
+
+
+@pytest.fixture
+def mock_load_summarize_chain(mocker):
+    """
+    Mock load_summarize_chain using a separate fixture
+    Note: IMPORTANT the app.server.summarize must be patched instead of the app.routes.summarize
+    since the conftest.py already imports app from server.py where summarize.py is loaded
+    """
+    mock_chain = mocker.MagicMock()
+    mock_chain.invoke.return_value = {"output_text": "Mocked Summary"}
+    mocker.patch('app.server.summarize.load_summarize_chain', return_value=mock_chain)
+    return mock_chain
+
+
+@pytest.fixture
+def mock_load_llm(mocker):
+    """Mock load_llm using a separate fixture"""
+    mock_llm = mocker.MagicMock()
+    mocker.patch('app.server.summarize.load_llm', return_value=mock_llm)
+    return mock_llm
