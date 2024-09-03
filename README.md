@@ -3,6 +3,7 @@
 Backend with fastapi+uvicorn for log analysis with LLMs.
 
 - [Log Analyzer](#log-analyzer)
+  - [API Architecture Setup](#api-architecture-setup)
   - [Setup](#setup)
     - [1. Create .env file](#1-create-env-file)
     - [2. Create shared volumes directory](#2-create-shared-volumes-directory)
@@ -16,6 +17,10 @@ Backend with fastapi+uvicorn for log analysis with LLMs.
   - [Testing](#testing)
   - [For Developers](#for-developers)
     - [To change schema of tables](#to-change-schema-of-tables)
+
+## API Architecture Setup
+
+[<img src="app/static/images/log analyzer.drawio.png">](https://link-to-your-URL/)
 
 ## Setup
 
