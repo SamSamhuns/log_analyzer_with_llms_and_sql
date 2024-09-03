@@ -52,7 +52,7 @@ async def sql_script(
 async def sql_question_answer(
         log_type: LogFileType,
         question: str,
-        model: LLMModel = LLMModel.GPT_4o_Mini.value):
+        model: LLMModel = LLMModel.GPT_4o_Mini):
     """Converts question into sql command & interact with SQL database"""
     status_code = status.HTTP_200_OK
     response_data = {}

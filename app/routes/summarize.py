@@ -21,13 +21,13 @@ logger = logging.getLogger('summarize_route')
              summary="Summarize uploaded file(s)")
 async def summarize_files(
         summarizer_mode: SummarizerMode,
-        model: LLMModel = LLMModel.Llamafile.value,
+        model: LLMModel = LLMModel.Llamafile,
         files: List[UploadFile] = File(...),):
     """Extract text from files and summarize based on selected mode"""
     response_data = {}
     try:
         print(f"Running summarization for files: {[file.filename for file in files]}")
-        llm = load_llm(model)
+        llm = load_llm(model.value)
         if summarizer_mode == "combined":
             # Combined summarization logic
             combined_docs = []
@@ -66,11 +66,13 @@ async def summarize_files(
              status_code=status.HTTP_200_OK,
              summary="Summarize content(s) from url")
 async def summarize_urls(
-        urls: List[str]):
+        urls: List[str],
+        model: LLMModel = LLMModel.Llamafile):
     """Extract text from files, summarize contents & return summary"""
     status_code = status.HTTP_200_OK
     response_data = {}
     try:
+        llm = load_llm(model.value)
         loader = WebBaseLoader(urls)
         docs = loader.load()
         chain = load_summarize_chain(llm, chain_type="stuff")
