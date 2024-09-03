@@ -1,31 +1,38 @@
 """
 Test configurations
 """
-import os
 import sys
 from io import BytesIO
 from datetime import date
-from typing import Callable
+from typing import Callable, Tuple
 
+import httpx
 import pytest
 import pytest_asyncio
 import pymysql
 from pymysql.cursors import DictCursor
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from fastapi import UploadFile
 sys.path.append("app")
 
 # custom test settings
 MYSQL_TEST_ID = -3
-MYSQL_TEST_TABLE = "test"
-os.environ["MYSQL_CUR_TABLE"] = MYSQL_TEST_TABLE  # chg cur table for test duration
+MYSQL_TEST_ANOMALY_DET_LOG_TABLE = "test_anomaly_detection_log"
+MYSQL_TEST_LOG_ID_TB_NAME = "test_log_fid"
+MYSQL_TEST_GENERAL_ID_TB_NAME = "test_general_fid"
 
-# custom imports
-from app.server import app  # must be import after changing MYSQL_CUR_TABLE env var
+# config imports
 from app.core.config import (
     MYSQL_HOST, MYSQL_PORT,
-    MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+    MYSQL_USER, MYSQL_PASSWORD,
+    MYSQL_LOG_ID_TB_NAME, MYSQL_GENERAL_ID_TB_NAME,
+    MYSQL_DATABASE)
+from app.server import upsert
 from app.core.setup import ANOMALY_DETECTION_LOG_TEXT2SQL_CFG
+# get default table names and rename to test tables
+upsert.MYSQL_LOG_ID_TB_NAME = MYSQL_TEST_LOG_ID_TB_NAME
+upsert.MYSQL_GENERAL_ID_TB_NAME = MYSQL_TEST_GENERAL_ID_TB_NAME
+from app.server import app  # must be import after changing all the core_config vars
 
 
 def _load_file_content(fpath: str) -> bytes:
@@ -38,12 +45,11 @@ def _load_file_content(fpath: str) -> bytes:
 
 
 @pytest_asyncio.fixture(scope="function")
-async def test_app_asyncio():
+async def test_app_asyncio() -> httpx.AsyncClient:
     """
     Sets up the async server
-    for httpx>=20, follow_redirects=True (cf. https://github.com/encode/httpx/releases/tag/0.20.0)
     """
-    async with AsyncClient(app=app, base_url="http://test") as aclient:
+    async with AsyncClient(transport=ASGITransport(app), base_url="http://test") as aclient:
         yield aclient  # testing happens here
 
 
@@ -59,23 +65,27 @@ def test_mysql_connec():
         db=MYSQL_DATABASE,
         cursorclass=DictCursor
     )
-    # create test table if not present & purge all existing data
-    with mysql_conn.cursor() as cursor:
-        cursor.execute(
-            f"CREATE TABLE IF NOT EXISTS {MYSQL_TEST_TABLE} LIKE {ANOMALY_DETECTION_LOG_TEXT2SQL_CFG.table_name};")
-        cursor.execute(f"DELETE FROM {MYSQL_TEST_TABLE}")
-    mysql_conn.commit()
+    # create test tables if not present & purge all existing data
+    for orig_tb, test_tb in zip(
+            [ANOMALY_DETECTION_LOG_TEXT2SQL_CFG.table_name, MYSQL_LOG_ID_TB_NAME, MYSQL_GENERAL_ID_TB_NAME],
+            [MYSQL_TEST_ANOMALY_DET_LOG_TABLE, MYSQL_TEST_LOG_ID_TB_NAME, MYSQL_TEST_GENERAL_ID_TB_NAME]
+            ):
+        with mysql_conn.cursor() as cursor:
+            cursor.execute(f"CREATE TABLE IF NOT EXISTS {test_tb} LIKE {orig_tb};")
+            cursor.execute(f"DELETE FROM {test_tb};")
+        mysql_conn.commit()
     yield mysql_conn
-    # drop table in teardown
+    # drop tables in teardown
     print("Tearing mysql connection")
-    with mysql_conn.cursor() as cursor:
-        cursor.execute(f"DROP TABLE {MYSQL_TEST_TABLE}")
-    mysql_conn.commit()
+    for test_tb in [MYSQL_TEST_ANOMALY_DET_LOG_TABLE, MYSQL_TEST_LOG_ID_TB_NAME, MYSQL_TEST_GENERAL_ID_TB_NAME]:
+        with mysql_conn.cursor() as cursor:
+            cursor.execute(f"DROP TABLE {test_tb}")
+        mysql_conn.commit()
     mysql_conn.close()
 
 
 @pytest.fixture(scope="session")
-def gen_mock_anomaly_det_log_data():
+def gen_mock_anomaly_det_log_data() -> Callable:
     """
     returns a func to create a data dict 
     for testing with anomaly_detection_log
@@ -93,7 +103,7 @@ def gen_mock_anomaly_det_log_data():
 
 
 @pytest.fixture(scope="session")
-def mock_valid_anomaly_det_log_str():
+def mock_valid_anomaly_det_log_str() -> str:
     """Generate valid anomaly det log str"""
     return """
     2024-01-01T12:00:00Z, 100ms, 1
@@ -102,7 +112,7 @@ def mock_valid_anomaly_det_log_str():
 
 
 @pytest.fixture(scope="session")
-def mock_invalid_anomaly_det_log_str():
+def mock_invalid_anomaly_det_log_str() -> str:
     """Generate anomaly det log str 
     with one valid and one invalid line"""
     return """
@@ -112,7 +122,7 @@ def mock_invalid_anomaly_det_log_str():
 
 
 @pytest.fixture(scope="session")
-def mock_one_anomaly_det_log_file_path_and_content():
+def mock_one_anomaly_det_log_file_path_and_content() -> Tuple[str, bytes]:
     """
     load and return an anomaly detection log file
     """
@@ -121,9 +131,9 @@ def mock_one_anomaly_det_log_file_path_and_content():
 
 
 @pytest.fixture(scope="session")
-def mock_file_url():
+def mock_file_url() -> str:
     """
-    returns an anomaly detection log file url
+    returns a random file url
     """
     return "https://raw.githubusercontent.com/SamSamhuns/face_registration_and_recognition_milvus/master/README.md"
 
