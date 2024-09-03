@@ -8,7 +8,7 @@ def is_valid_model_value(model_value):
 
 
 def load_llm(llm_name: str):
-    if llm_name == "Llamafile":
+    if llm_name == "llamafile":
         # llama model server must be running for this
         # https://python.langchain.com/v0.1/docs/use_cases/question_answering/local_retrieval_qa/#llamafile
         # ./TinyLlama-1.1B-Chat-v1.0.Q5_K_M.llamafile --server --nobrowser
