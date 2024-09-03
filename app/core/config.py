@@ -28,6 +28,14 @@ os.makedirs(ROOT_STORAGE_DIR, exist_ok=True)
 os.makedirs(FILE_STORAGE_DIR, exist_ok=True)
 os.makedirs(LOG_STORAGE_DIR, exist_ok=True)
 
+# logging conf
+log_cfg = LogConfig()
+# override info & error log paths
+log_cfg.handlers["info_rotating_file_handler"]["filename"] = os.path.join(LOG_STORAGE_DIR, "info.log")
+log_cfg.handlers["warning_file_handler"]["filename"] = os.path.join(LOG_STORAGE_DIR, "error.log")
+log_cfg.handlers["error_file_handler"]["filename"] = os.path.join(LOG_STORAGE_DIR, "error.log")
+dictConfig(log_cfg.model_dump())
+
 # mysql conf
 MYSQL_HOST = os.getenv("MYSQL_HOST", default="0.0.0.0")
 MYSQL_PORT = int(os.getenv("MYSQL_PORT", default="3306"))
@@ -36,13 +44,5 @@ MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", default="pass")
 MYSQL_DATABASE = os.getenv("MYSQL_DATABASE", default="default")
 
 # mysql table info
-MYSQL_LOG_ID_TB_NAME = os.getenv("MYSQL_LOG_ID_TB_NAME", default="log_fid")
-MYSQL_GENERAL_ID_TB_NAME = os.getenv("MYSQL_GENERAL_ID_TB_NAME", default="general_fid")
-
-# logging conf
-log_cfg = LogConfig()
-# override info & error log paths
-log_cfg.handlers["info_rotating_file_handler"]["filename"] = os.path.join(LOG_STORAGE_DIR, "info.log")
-log_cfg.handlers["warning_file_handler"]["filename"] = os.path.join(LOG_STORAGE_DIR, "error.log")
-log_cfg.handlers["error_file_handler"]["filename"] = os.path.join(LOG_STORAGE_DIR, "error.log")
-dictConfig(log_cfg.model_dump())
+MYSQL_LOG_ID_TB_NAME = "log_fid"
+MYSQL_GENERAL_ID_TB_NAME = "general_fid"
