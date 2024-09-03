@@ -8,7 +8,7 @@ from fastapi import APIRouter, status, HTTPException
 
 from api.langchain_custom.text2sql import text_to_sql
 from api.mysql import run_sql_script, sep_query_and_params
-from models.model import SQLQueryParams, LogFileType
+from models.model import SQLQueryParams, LogFileType, LLMModel
 from core.setup import mysql_conn, TEXT2SQL_CFG_DICT
 
 router = APIRouter()
@@ -51,8 +51,9 @@ async def sql_script(
              summary="Convert query into sql command & interact with SQL database")
 async def sql_question_answer(
         log_type: LogFileType,
-        question: str):
-    """Converts question into sql comamnd & interact with SQL database"""
+        question: str,
+        model: LLMModel = LLMModel.GPT_4o_Mini.value):
+    """Converts question into sql command & interact with SQL database"""
     status_code = status.HTTP_200_OK
     response_data = {}
     try:
@@ -60,7 +61,7 @@ async def sql_question_answer(
         llm_sql_query = text_to_sql(
             question=question,
             text2sql_cfg_obj=text2sql_cfg_obj,
-            llm_config={"model": "gpt-4o", "temperature": 0},
+            llm_config={"model": model.value, "temperature": 0},
             top_k=text2sql_cfg_obj.top_k)
 
         query, params = sep_query_and_params(
