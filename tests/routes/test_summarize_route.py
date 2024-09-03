@@ -3,13 +3,16 @@ Test summarization endpoint
 WARNING: The load_llm and load_summarize_chain fixtures are defined in conftest.py and are mocked
 If lagnchain does breaking changes in  the apis of load_llm and load_summarize_chain, this test mights till pass
 """
+from typing import Callable
 import pytest
+import httpx
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("summarizer_mode", ["individual", "combined"])
-async def test_summarize_single_file(mock_load_summarize_chain, mock_load_llm,
-                                     test_app_asyncio, gen_mock_upload_file, summarizer_mode):
+async def test_summarize_single_file(
+        test_app_asyncio: httpx.AsyncClient, mock_load_summarize_chain, mock_load_llm,
+        gen_mock_upload_file: Callable, summarizer_mode: str):
     """Test the individual file summarize mode"""
     upload_file = gen_mock_upload_file()
     response = await test_app_asyncio.post(
@@ -29,8 +32,9 @@ async def test_summarize_single_file(mock_load_summarize_chain, mock_load_llm,
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("summarizer_mode", ["individual", "combined"])
-async def test_summarize_multiple_files(mock_load_summarize_chain, mock_load_llm,
-                                        test_app_asyncio, gen_mock_upload_file, summarizer_mode):
+async def test_summarize_multiple_files(
+        test_app_asyncio: httpx.AsyncClient, mock_load_summarize_chain, mock_load_llm,
+        gen_mock_upload_file: Callable, summarizer_mode: str):
     """Test the individual file summarize mode"""
     upload_file1 = gen_mock_upload_file("sample1.log")
     upload_file2 = gen_mock_upload_file("sample2.log")
@@ -51,8 +55,9 @@ async def test_summarize_multiple_files(mock_load_summarize_chain, mock_load_llm
 
 
 @pytest.mark.asyncio
-async def test_summarize_urls(test_app_asyncio, mock_file_url,
-                              mock_load_summarize_chain, mock_load_llm):
+async def test_summarize_urls(
+        test_app_asyncio: httpx.AsyncClient, mock_load_summarize_chain, mock_load_llm, 
+        mock_file_url):
     response = await test_app_asyncio.post(
         "/summarize/urls",
         json=[mock_file_url]
