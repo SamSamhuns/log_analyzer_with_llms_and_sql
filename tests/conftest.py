@@ -72,12 +72,13 @@ def test_mysql_connec():
         # drop tables in teardown
         print("Tearing mysql connection")
         for test_tb in [MYSQL_TEST_ANOMALY_DET_LOG_TABLE, MYSQL_TEST_LOG_ID_TB_NAME, MYSQL_TEST_GENERAL_ID_TB_NAME]:
-            try:
-                with mysql_conn.cursor() as cursor:
-                    cursor.execute(f"DROP TABLE {test_tb}")
-                mysql_conn.commit()
-            except Exception:
-                pass
+            with mysql_conn() as conn:
+                with conn.cursor() as cursor:
+                    try:
+                        cursor.execute(f"DROP TABLE {test_tb}")
+                        conn.commit()
+                    except Exception:
+                        pass
 
 
 @pytest.fixture(scope="session")
