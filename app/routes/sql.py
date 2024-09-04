@@ -41,7 +41,7 @@ async def sql_script(
     except Exception as excep:
         logger.error("%s: %s", excep, traceback.print_exc())
         status_code = status.HTTP_400_BAD_REQUEST if status_code == status.HTTP_200_OK else status_code
-        detail = response_data.get("detail", "Failed to run SQL query in MySQL server")
+        detail = response_data.get("detail", "Failed to run SQL query in the MySQL server")
         raise HTTPException(status_code=status_code, detail=detail) from excep
     return response_data
 
@@ -84,6 +84,6 @@ async def sql_question_answer(
     except Exception as excep:
         logger.error("%s: %s", excep, traceback.print_exc())
         status_code = status.HTTP_400_BAD_REQUEST if status_code == status.HTTP_200_OK else status_code
-        detail = response_data.get("detail", "failed to conduct query search in server")
+        detail = response_data.get("detail", "failed to conduct query in the MySQL server")
         raise HTTPException(status_code=status_code, detail=detail) from excep
     return response_data

@@ -1,22 +1,35 @@
 """
 Setup connections
 """
+from typing import Callable
 import pymysql
 from pymysql.cursors import DictCursor
 from models.model import LogFileType, LogText2SQLConfig
 from core.config import (
     MYSQL_HOST, MYSQL_PORT, MYSQL_USER,
     MYSQL_PASSWORD, MYSQL_DATABASE)
+from contextlib import contextmanager
 
 
-# Connect to MySQL
-mysql_conn = pymysql.connect(
-    host=MYSQL_HOST,
-    port=MYSQL_PORT,
-    user=MYSQL_USER,
-    password=MYSQL_PASSWORD,
-    db=MYSQL_DATABASE,
-    cursorclass=DictCursor)
+def get_mysql_connection() -> pymysql.connections.Connection:
+    """Return mysql connec object"""
+    return pymysql.connect(
+        host=MYSQL_HOST,
+        port=MYSQL_PORT,
+        user=MYSQL_USER,
+        password=MYSQL_PASSWORD,
+        db=MYSQL_DATABASE,
+        cursorclass=DictCursor)
+
+
+@contextmanager
+def mysql_conn() -> Callable:
+    """Yield mysql connection obj"""
+    conn = get_mysql_connection()
+    try:
+        yield conn
+    finally:
+        conn.close()
 
 
 ######################################################################

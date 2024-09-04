@@ -9,8 +9,6 @@ from typing import Callable, Tuple
 import httpx
 import pytest
 import pytest_asyncio
-import pymysql
-from pymysql.cursors import DictCursor
 from httpx import AsyncClient, ASGITransport
 from fastapi import UploadFile
 sys.path.append("app")
@@ -23,17 +21,13 @@ MYSQL_TEST_GENERAL_ID_TB_NAME = "test_general_fid"
 
 # config imports
 from app.core.config import (
-    MYSQL_HOST, MYSQL_PORT,
-    MYSQL_USER, MYSQL_PASSWORD,
-    MYSQL_LOG_ID_TB_NAME, MYSQL_GENERAL_ID_TB_NAME,
-    MYSQL_DATABASE)
+    MYSQL_LOG_ID_TB_NAME, MYSQL_GENERAL_ID_TB_NAME)
 from app.server import upsert
-from app.core.setup import ANOMALY_DETECTION_LOG_TEXT2SQL_CFG
+from app.core.setup import mysql_conn, ANOMALY_DETECTION_LOG_TEXT2SQL_CFG
 # get default table names and rename to test tables
 upsert.MYSQL_LOG_ID_TB_NAME = MYSQL_TEST_LOG_ID_TB_NAME
 upsert.MYSQL_GENERAL_ID_TB_NAME = MYSQL_TEST_GENERAL_ID_TB_NAME
 from app.server import app  # must be import after changing all the core_config vars
-
 
 def _load_file_content(fpath: str) -> bytes:
     """
@@ -56,44 +50,34 @@ async def test_app_asyncio() -> httpx.AsyncClient:
 @pytest.fixture(scope="module")
 def test_mysql_connec():
     """Yields a mysql connection instance"""
-    mysql_conn = None
     try:
         print("Setting mysql connection")
-        mysql_conn = pymysql.connect(
-            host=MYSQL_HOST,
-            port=MYSQL_PORT,
-            user=MYSQL_USER,
-            password=MYSQL_PASSWORD,
-            db=MYSQL_DATABASE,
-            cursorclass=DictCursor
-        )
         # create test tables if not present & purge all existing data
         print("Creating test tables based on existing table schemas")
         for orig_tb, test_tb in zip(
                 [ANOMALY_DETECTION_LOG_TEXT2SQL_CFG.table_name, MYSQL_LOG_ID_TB_NAME, MYSQL_GENERAL_ID_TB_NAME],
                 [MYSQL_TEST_ANOMALY_DET_LOG_TABLE, MYSQL_TEST_LOG_ID_TB_NAME, MYSQL_TEST_GENERAL_ID_TB_NAME]
                 ):
-            try:
-                with mysql_conn.cursor() as cursor:
-                    cursor.execute(f"CREATE TABLE IF NOT EXISTS {test_tb} LIKE {orig_tb};")
-                    cursor.execute(f"DELETE FROM {test_tb};")
-                mysql_conn.commit()
-            except Exception as e:
-                mysql_conn.rollback()
-                raise e
+            with mysql_conn() as conn:
+                try:
+                    with conn.cursor() as cursor:
+                        cursor.execute(f"CREATE TABLE IF NOT EXISTS {test_tb} LIKE {orig_tb};")
+                        cursor.execute(f"DELETE FROM {test_tb};")
+                    conn.commit()
+                except Exception as e:
+                    conn.rollback()
+                    raise e
         yield mysql_conn
     finally:
-        if mysql_conn:
-            # drop tables in teardown
-            print("Tearing mysql connection")
-            for test_tb in [MYSQL_TEST_ANOMALY_DET_LOG_TABLE, MYSQL_TEST_LOG_ID_TB_NAME, MYSQL_TEST_GENERAL_ID_TB_NAME]:
-                try:
-                    with mysql_conn.cursor() as cursor:
-                        cursor.execute(f"DROP TABLE {test_tb}")
-                    mysql_conn.commit()
-                except Exception:
-                    pass
-            mysql_conn.close()
+        # drop tables in teardown
+        print("Tearing mysql connection")
+        for test_tb in [MYSQL_TEST_ANOMALY_DET_LOG_TABLE, MYSQL_TEST_LOG_ID_TB_NAME, MYSQL_TEST_GENERAL_ID_TB_NAME]:
+            try:
+                with mysql_conn.cursor() as cursor:
+                    cursor.execute(f"DROP TABLE {test_tb}")
+                mysql_conn.commit()
+            except Exception:
+                pass
 
 
 @pytest.fixture(scope="session")
@@ -179,3 +163,11 @@ def mock_load_llm(mocker):
     mock_llm = mocker.MagicMock()
     mocker.patch('app.server.summarize.load_llm', return_value=mock_llm)
     return mock_llm
+
+
+@pytest.fixture
+def mock_text_to_sql(mocker):
+    """Mock text_to_sql using a separate fixture"""
+    mock_text2sql_resp = f"SELECT * FROM {MYSQL_TEST_ANOMALY_DET_LOG_TABLE} LIMIT 5;"
+    mocker.patch('app.server.sql.text_to_sql', return_value=mock_text2sql_resp)
+    return mock_text2sql_resp

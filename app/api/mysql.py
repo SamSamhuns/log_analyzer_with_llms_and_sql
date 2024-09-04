@@ -68,20 +68,21 @@ def run_sql_script(mysql_conn, sql_script: str, params: tuple = None, commit: bo
                            f"{disabled_cmds} commands are not allowed."}
 
     try:
-        with mysql_conn.cursor() as cursor:
-            if params:
-                cursor.execute(sql_script, params)
-            else:
-                cursor.execute(sql_script)
-            if commit:
-                mysql_conn.commit()
-                logger.info("SQL script executed successfully and committed to MySQL database. ✅️")
-                return {"status": "success", "message": "SQL script executed and committed successfully."}
-            results = cursor.fetchall()  # Fetch results from a SELECT query
-            logger.info("SQL script executed successfully, fetched results. ✅️")
-            return {"status": "success",
-                    "message": "SQL script executed successfully, fetched results.", 
-                    "data": results}
+        with mysql_conn() as conn:
+            with conn.cursor() as cursor:
+                if params:
+                    cursor.execute(sql_script, params)
+                else:
+                    cursor.execute(sql_script)
+                if commit:
+                    conn.commit()
+                    logger.info("SQL script executed successfully and committed to MySQL database. ✅️")
+                    return {"status": "success", "message": "SQL script executed and committed successfully."}
+                results = cursor.fetchall()  # Fetch results from a SELECT query
+                logger.info("SQL script executed successfully, fetched results. ✅️")
+                return {"status": "success",
+                        "message": "SQL script executed successfully, fetched results.", 
+                        "data": results}
     except pymysql.Error as excep:
         logger.error("%s: SQL script execution failed ❌", excep)
         return {"status": "failed",
@@ -106,17 +107,18 @@ def insert_bulk_data_into_sql(mysql_conn, tb_name, data_dicts: list, commit: boo
     values = [tuple(data_dict.values()) for data_dict in data_dicts]
 
     try:
-        with mysql_conn.cursor() as cursor:
-            logger.info("Attempting to bulk insert %d records into mysql db.", len(values))
-            cursor.executemany(query, values)
-            if commit:
-                mysql_conn.commit()
-                logger.info("%d records bulk inserted into mysql db.✅️", len(values))
+        with mysql_conn() as conn:
+            with conn.cursor() as cursor:
+                logger.info("Attempting to bulk insert %d records into mysql db.", len(values))
+                cursor.executemany(query, values)
+                if commit:
+                    conn.commit()
+                    logger.info("%d records bulk inserted into mysql db.✅️", len(values))
+                    return {"status": "success",
+                            "message": "Bulk records inserted into mysql db"}
+                logger.info("Bulk record insertion waiting to be committed to mysql db.🕓")
                 return {"status": "success",
-                        "message": "Bulk records inserted into mysql db"}
-            logger.info("Bulk record insertion waiting to be committed to mysql db.🕓")
-            return {"status": "success",
-                    "message": "Bulk record insertion waiting to be committed to mysql db."}
+                        "message": "Bulk record insertion waiting to be committed to mysql db."}
     except pymysql.Error as excep:
         logger.error("%s: mysql bulk record insertion failed ❌", excep)
         return {"status": "failed",
@@ -134,16 +136,17 @@ def insert_data_into_sql(mysql_conn, tb_name, data_dict: dict, commit: bool = Tr
     query = f"INSERT INTO {tb_name} ({col_names}) VALUES ({placeholders})".replace("'", '')
     values = tuple(data_dict.values())
     try:
-        with mysql_conn.cursor() as cursor:
-            cursor.execute(query, values)
-            if commit:
-                mysql_conn.commit()
-                logger.info("record inserted into mysql db.✅️")
+        with mysql_conn() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(query, values)
+                if commit:
+                    conn.commit()
+                    logger.info("record inserted into mysql db.✅️")
+                    return {"status": "success",
+                            "message": "record inserted into mysql db"}
+                logger.info("record insertion waiting to be committed to mysql db.🕓")
                 return {"status": "success",
-                        "message": "record inserted into mysql db"}
-            logger.info("record insertion waiting to be committed to mysql db.🕓")
-            return {"status": "success",
-                    "message": "record insertion waiting to be committed to mysql db."}
+                        "message": "record insertion waiting to be committed to mysql db."}
     except pymysql.Error as excep:
         logger.error("%s: mysql record insertion failed ❌", excep)
         return {"status": "failed",
@@ -157,17 +160,18 @@ def select_data_from_sql_with_id(mysql_conn, tb_name, data_id: int) -> dict:
     query = f"SELECT * FROM {tb_name} WHERE id = %s"
     values = (data_id,)
     try:
-        with mysql_conn.cursor() as cursor:
-            cursor.execute(query, values)
-            data = cursor.fetchone()
-            if data is None:
-                logger.warning("mysql record with id: %s does not exist ❌.", data_id)
-                return {"status": "failed",
-                        "message": f"mysql record with id: {data_id} does not exist"}
-            logger.info("Data with id: %s retrieved from mysql db.✅️", data_id)
-            return {"status": "success",
-                    "message": f"record matching id: {data_id} retrieved from mysql db",
-                    "data": data}
+        with mysql_conn() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(query, values)
+                data = cursor.fetchone()
+                if data is None:
+                    logger.warning("mysql record with id: %s does not exist ❌.", data_id)
+                    return {"status": "failed",
+                            "message": f"mysql record with id: {data_id} does not exist"}
+                logger.info("Data with id: %s retrieved from mysql db.✅️", data_id)
+                return {"status": "success",
+                        "message": f"record matching id: {data_id} retrieved from mysql db",
+                        "data": data}
     except pymysql.Error as excep:
         logger.error("%s: mysql record retrieval failed ❌", excep)
         return {"status": "failed",
@@ -180,17 +184,18 @@ def select_all_data_from_sql(mysql_conn, tb_name) -> dict:
     """
     query = f"SELECT * FROM {tb_name}"
     try:
-        with mysql_conn.cursor() as cursor:
-            cursor.execute(query)
-            data = cursor.fetchall()
-            if not data:
-                logger.warning("No mysql records were found ❌.")
-                return {"status": "failed",
-                        "message": "No mysql records were found."}
-            logger.info("All records retrieved from mysql db.✅️")
-            return {"status": "success",
-                    "message": "All records retrieved from mysql db",
-                    "data": data}
+        with mysql_conn() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(query)
+                data = cursor.fetchall()
+                if not data:
+                    logger.warning("No mysql records were found ❌.")
+                    return {"status": "failed",
+                            "message": "No mysql records were found."}
+                logger.info("All records retrieved from mysql db.✅️")
+                return {"status": "success",
+                        "message": "All records retrieved from mysql db",
+                        "data": data}
     except pymysql.Error as excep:
         logger.error("%s: mysql record retrieval failed ❌", excep)
         return {"status": "failed",
@@ -204,23 +209,24 @@ def delete_data_from_sql_with_id(mysql_conn, tb_name, data_id: int, commit: bool
     select_query = f"SELECT * FROM {tb_name} WHERE id = %s"
     del_query = f"DELETE FROM {tb_name} WHERE id = %s"
     try:
-        with mysql_conn.cursor() as cursor:
-            # check if record exists in db or not
-            cursor.execute(select_query, (data_id))
-            if not cursor.fetchone():
-                logger.error("Data with id: %s does not exist in mysql db.❌", data_id)
-                return {"status": "failed",
-                        "message": f"mysql record with id: {data_id} does not exist in db"}
+        with mysql_conn() as conn:
+            with conn.cursor() as cursor:
+                # check if record exists in db or not
+                cursor.execute(select_query, (data_id))
+                if not cursor.fetchone():
+                    logger.error("Data with id: %s does not exist in mysql db.❌", data_id)
+                    return {"status": "failed",
+                            "message": f"mysql record with id: {data_id} does not exist in db"}
 
-            cursor.execute(del_query, (data_id))
-            if commit:
-                mysql_conn.commit()
-                logger.info("Data with id: %s deleted from mysql db.✅️", data_id)
+                cursor.execute(del_query, (data_id))
+                if commit:
+                    conn.commit()
+                    logger.info("Data with id: %s deleted from mysql db.✅️", data_id)
+                    return {"status": "success",
+                            "message": "record deleted from mysql db"}
+                logger.info("record deletion waiting to be commited to mysql db.🕓")
                 return {"status": "success",
-                        "message": "record deleted from mysql db"}
-            logger.info("record deletion waiting to be commited to mysql db.🕓")
-            return {"status": "success",
-                    "message": "record deletion waiting to be commited to mysql db."}
+                        "message": "record deletion waiting to be commited to mysql db."}
     except pymysql.Error as excep:
         logger.error("%s: mysql record deletion failed ❌", excep)
         return {"status": "failed",
@@ -230,16 +236,17 @@ def delete_data_from_sql_with_id(mysql_conn, tb_name, data_id: int, commit: bool
 def table_exists(mysql_conn, tb_name: str) -> bool:
     """Check if table exists in the database"""
     try:
-        with mysql_conn.cursor() as cursor:
-            cursor.execute(f"SHOW TABLES LIKE '{tb_name}'")
-            result = cursor.fetchone()
-            return result is not None
+        with mysql_conn() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(f"SHOW TABLES LIKE '{tb_name}'")
+                result = cursor.fetchone()
+                return result is not None
     except pymysql.MySQLError as e:
         print(f"Error checking if table exists: {e}")
         return False
 
 
-def entries_exist(connection, tb_name: str, conditions: dict, logic: str = 'AND') -> bool:
+def entries_exist(mysql_conn, tb_name: str, conditions: dict, logic: str = 'AND') -> bool:
     """
     CHeck if entries exist in a table
     Example use:
@@ -252,15 +259,16 @@ def entries_exist(connection, tb_name: str, conditions: dict, logic: str = 'AND'
     """
     try:
         assert logic in {"AND", "OR"}
-        with connection.cursor() as cursor:
-            # Construct the WHERE clause dynamically based on provided conditions and logic
-            clause = f" {logic} ".join([f"{column} = %s" for column in conditions.keys()])
-            query = f"SELECT 1 FROM `{tb_name}` WHERE {clause} LIMIT 1"
-            # Extract values for the SQL query parameters
-            values = tuple(value for value in conditions.values())
-            cursor.execute(query, values)
-            result = cursor.fetchone()
-            return result is not None
+        with mysql_conn() as conn:
+            with conn.cursor() as cursor:
+                # Construct the WHERE clause dynamically based on provided conditions and logic
+                clause = f" {logic} ".join([f"{column} = %s" for column in conditions.keys()])
+                query = f"SELECT 1 FROM `{tb_name}` WHERE {clause} LIMIT 1"
+                # Extract values for the SQL query parameters
+                values = tuple(value for value in conditions.values())
+                cursor.execute(query, values)
+                result = cursor.fetchone()
+                return result is not None
     except pymysql.MySQLError as e:
         print(f"Error checking if entries exist: {e}")
         return False
