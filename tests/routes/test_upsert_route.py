@@ -43,6 +43,21 @@ async def test_file_upsert_success(
 
 
 @pytest.mark.asyncio
+async def test_file_duplicated_upsert(
+        test_app_asyncio: httpx.AsyncClient,
+        test_mysql_connec: Connection):
+    """Test the file_upsert endpoint"""
+    files = [
+        ("files", ("document.txt", b"TXT file content", "text/plain")),
+    ]
+    response = await test_app_asyncio.post("/upsert/files", files=files)
+    data = response.json()
+    assert response.status_code == 200
+    assert data["status"] == "failed"
+    assert data["detail"] == "uploaded file(s) could not be uploaded or already exist in system"
+
+
+@pytest.mark.asyncio
 async def test_file_upsert_unsupported_file(
         test_app_asyncio: httpx.AsyncClient):
     """Test the file_upsert endpoint with an unsupported file type"""
