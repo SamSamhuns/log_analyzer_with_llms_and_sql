@@ -70,7 +70,9 @@ async def log_upsert(
             # get log object list from file contents using the appropriate logfile_type format
             log_obj_list = gen_log_obj_list(file_content_str, logfile_id=fmd5, logfile_type=logfile_type)
             # insert contents of logfile into logfile_type table
-            insert_bulk_data_into_sql(mysql_conn, tb_name=logfile_type, data_dicts=log_obj_list)
+            insertion_status = insert_bulk_data_into_sql(mysql_conn, tb_name=logfile_type, data_dicts=log_obj_list)
+            if insertion_status["status"] == "failed":
+                raise Exception(insertion_status["message"])
 
             logged_files.append(f_name)
         if len(logged_files) > 0:
