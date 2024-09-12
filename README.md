@@ -17,7 +17,7 @@ Backend with fastapi+uvicorn for log analysis with LLMs.
     - [Optional: expose app through ngrok docker for sharing localhost on the internet](#optional-expose-app-through-ngrok-docker-for-sharing-localhost-on-the-internet)
   - [Testing](#testing)
   - [For Developers](#for-developers)
-    - [To change schema of tables](#to-change-schema-of-tables)
+    - [To change/add/delete new log table schemas](#to-changeadddelete-new-log-table-schemas)
 
 ## API Architecture Setup
 
@@ -178,12 +178,18 @@ coverage report -m -i
 
 ## For Developers
 
-### To change schema of tables
+### To change/add/delete new log table schemas
+
+The new SQL table should also be created through the PHPMyAdmin GUI/mysql command line inside the mariadb container.
 
 The following files must be edited.
 
--   Edit/add to `init.sql` for changing/adding log table schema
--   Edit/add to `app/api/log_format/log_parser.py` for parsing logs
--   Edit/add to `app/core.setup.py` for adding table schema and data sample info
--   Edit/add to `tests/conftests.py` for setting the correct values for the test database
--   Edit/add to `tests/api/test_mysql_api.py` for setting the correct values for the test database
+-   Edit `app/static/sql/init.sql` for changing/adding log table schema
+-   Edit `app/models/model.py` to add/edit the LogFileType
+-   Edit `app/api/log_format/log_parser.py` for parsing logs
+-   Edit `app/core/setup.py` for adding table schema and data sample info for text2sql conversion
+
+Editing Tests
+
+-   Edit `tests/conftests.py` for setting the correct values for the test database
+-   Edit `tests/api/test_mysql_api.py` for setting the correct values for the test database
