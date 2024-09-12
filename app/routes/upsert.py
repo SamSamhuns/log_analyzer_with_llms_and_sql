@@ -33,7 +33,7 @@ router = APIRouter()
 logger = logging.getLogger('upsert_route')
 
 
-@router.post("/logs/{LogFileType}", response_model=Dict,
+@router.post("/logs", response_model=Dict,
              status_code=status.HTTP_200_OK,
              summary="Extract info from log files and store them in a sql database")
 async def log_upsert(
