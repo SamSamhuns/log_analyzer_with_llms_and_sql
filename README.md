@@ -13,7 +13,8 @@ Backend with fastapi+uvicorn for log analysis with LLMs.
     - [Option B) Docker and local virtual env](#option-b-docker-and-local-virtual-env)
       - [Option Bi) Uvicorn server with fastapi with Docker](#option-bi-uvicorn-server-with-fastapi-with-docker)
       - [Option Bii) Uvicorn server with fastapi with venv](#option-bii-uvicorn-server-with-fastapi-with-venv)
-    - [Optionally expose app through ngrok docker for sharing localhost on the internet](#optionally-expose-app-through-ngrok-docker-for-sharing-localhost-on-the-internet)
+    - [Optional: frontend with streamlit](#optional-frontend-with-streamlit)
+    - [Optional: expose app through ngrok docker for sharing localhost on the internet](#optional-expose-app-through-ngrok-docker-for-sharing-localhost-on-the-internet)
   - [Testing](#testing)
   - [For Developers](#for-developers)
     - [To change schema of tables](#to-change-schema-of-tables)
@@ -130,7 +131,14 @@ python app/server.py -p EXPOSED_HTTP_PORT
 
 The server will be available at <http://localhost:8080> if using the default port.
 
-### Optionally expose app through ngrok docker for sharing localhost on the internet
+### Optional: frontend with streamlit
+
+```shell
+pip install streamlit==1.38.0
+streamlit run app/streamlit_frontend.py
+```
+
+### Optional: expose app through ngrok docker for sharing localhost on the internet
 
 WARNING: Never use for production
 
