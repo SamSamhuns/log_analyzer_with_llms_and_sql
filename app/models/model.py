@@ -14,7 +14,17 @@ class InputModel(BaseModel):
     file_path: str
 
 
+class QueryRequest(BaseModel):
+    """
+    Query request model for query string
+    """
+    query: str
+
+
 class SQLQueryParams(BaseModel):
+    """
+    SQL query and optional parameters
+    """
     query: str
     params: Optional[List[Any]] = None
 
