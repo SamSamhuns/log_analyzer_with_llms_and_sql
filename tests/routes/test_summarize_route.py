@@ -16,7 +16,7 @@ async def test_summarize_single_file(
     """Test the individual file summarize mode"""
     upload_file = gen_mock_upload_file()
     response = await test_app_asyncio.post(
-        "summarize/files/{SummarizerMode}?summarizer_mode=" + summarizer_mode,
+        f"summarize/files?summarizer_mode={summarizer_mode}",
         files={"files": (upload_file.filename,
                          upload_file.file.read(), "text/plain")},
     )
@@ -39,7 +39,7 @@ async def test_summarize_multiple_files(
     upload_file1 = gen_mock_upload_file("sample1.log")
     upload_file2 = gen_mock_upload_file("sample2.log")
     response = await test_app_asyncio.post(
-        "summarize/files/{SummarizerMode}?summarizer_mode=" + summarizer_mode,
+        f"summarize/files?summarizer_mode={summarizer_mode}",
         files=[
             ('files', (upload_file1.filename, upload_file1.file.read(), "text/plain")),
             ('files', (upload_file2.filename, upload_file2.file.read(), "text/plain")),],

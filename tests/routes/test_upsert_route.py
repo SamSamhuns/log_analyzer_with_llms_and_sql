@@ -17,7 +17,7 @@ async def test_log_upsert(
     files = [("files", (fpath, fcontent, "text/plain"))]
 
     response = await test_app_asyncio.post(
-        "/upsert/logs/{LogFileType}?log_type=anomaly_detection_log",
+        "/upsert/logs?log_type=anomaly_detection_log",
         files=files)
 
     data = response.json()

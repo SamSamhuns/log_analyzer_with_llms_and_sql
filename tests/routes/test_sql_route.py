@@ -25,10 +25,12 @@ async def test_sql_question_answer(test_app_asyncio: httpx.AsyncClient, test_mys
     # Test for a specific log file type and a sample question
     params = {
         'log_type': 'anomaly_detection_log',
-        'question': 'Give me the latest logs',
         'model': 'llamafile',
     }
-    response = await test_app_asyncio.post("sql/qa/{LogFileType}", params=params)
+    request_data = {
+        'query': 'Give me the latest 15 logs'
+    }
+    response = await test_app_asyncio.post("sql/qa?log_type=anomaly_detection_log", params=params, json=request_data)
     data = response.json()
     assert response.status_code == 200
     assert data["status"] == "success"
