@@ -16,7 +16,7 @@ router = APIRouter()
 logger = logging.getLogger('summarize_route')
 
 
-@router.post("/files/{SummarizerMode}", response_model=Dict,
+@router.post("/files", response_model=Dict,
              status_code=status.HTTP_200_OK,
              summary="Summarize uploaded file(s)")
 async def summarize_files(
