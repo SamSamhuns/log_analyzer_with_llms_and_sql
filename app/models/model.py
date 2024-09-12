@@ -42,6 +42,7 @@ class LogFileType(str, Enum):
     Log file types and table names in sql database
     """
     ANOMALY_DETECTION_LOG: str = "anomaly_detection_log"
+    RTA_WORKER_SWITCH_LOG: str = "rta_worker_switch_log"
 
 
 class LLMModel(Enum):

@@ -84,6 +84,51 @@ class ANOMALY_DETECTION_LOG_TEXT2SQL_CFG(LogText2SQLConfig):
     """
 
 
+class RTA_WORKER_SWITCH_LOG_TEXT2SQL_CFG(LogText2SQLConfig):
+    """
+    rta_worker_switch_log text to sql config
+    """
+
+    table_name = "rta_worker_switch_log"
+    table_schema = str(["ID", "log_fid", "timestamp", "goal_type", "rta_status"])
+    table_examples = '''[
+        (1, '1bd5f7de3578d0ecc13de276ea4a16d7', 2024-08-21, 'WORKER', 0),
+        (2, '1bd5f7de3578d0ecc13de276ea4a16d7', 2024-08-21, 'WORKER', 0),
+        (3, '1bd5f7de3578d0ecc13de276ea4a16d7', 2024-08-21, 'WORKER', 0),
+        (4, '1bd5f7de3578d0ecc13de276ea4a16d7', 2024-08-21, 'WORKER', 0),
+        (5, '1bd5f7de3578d0ecc13de276ea4a16d7', 2024-08-21, 'WORKER', 0)]
+    '''
+    table_info = table_schema + '\nExamples of entries:\n' + table_examples
+    top_k = 5
+
+    # Definition of the running logic of the tool
+    sql_prompt_template = """You are a mariadb MySQL expert.
+    Given an input question, create a syntactically correct MySQL query to run with pymysql. The database contains only one table, called '{table_name}'.
+    Unless the user specifies in the question a specific number of examples to obtain, query for at most {top_k} results using the LIMIT clause as per MySQL.
+    Order the results to return the most informative data in the database.
+    Never query for all columns from a table. You must query only the columns that are needed to answer the question.
+    Pay attention to use only the column names you can see in the table below. Be careful to not query for columns that do not exist.
+    Pay attention to use CURRENT_DATE function to get the current date, if the question involves "today".
+
+    Only use the following table:
+    {table_info}
+
+    The table describes rta worker switch logs in a drone. The fields are:
+    - ID INT NOT NULL AUTO_INCREMENT, # PRIMARY KEY that autoincrements
+    - log_fid VARCHAR(32) NOT NULL # log file id which is the md5 hash of the log file
+    - timestamp DATE NOT NULL # timestamp of the log
+    - goal_type VARCHAR(32) NOT NULL # the goal type of the rta switch worker
+    - rta_status INT NOT NULL # the rta status of the worker, int from 0 to 3
+
+    Here are some examples of questions that you may get:
+    1. What are the recent rta status?
+    2. Group the different observed rta status today.
+    3. What is the most common goal type?
+    4. Are there any rta status observed on a specific date, e.g., 2023-01-15?
+    """
+
+
 TEXT2SQL_CFG_DICT = {
-    LogFileType.ANOMALY_DETECTION_LOG.value: ANOMALY_DETECTION_LOG_TEXT2SQL_CFG
+    LogFileType.ANOMALY_DETECTION_LOG.value: ANOMALY_DETECTION_LOG_TEXT2SQL_CFG,
+    LogFileType.RTA_WORKER_SWITCH_LOG.value: RTA_WORKER_SWITCH_LOG_TEXT2SQL_CFG
 }

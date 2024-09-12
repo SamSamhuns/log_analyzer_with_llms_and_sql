@@ -33,3 +33,16 @@ CREATE TABLE IF NOT EXISTS `anomaly_detection_log` (
 
     PRIMARY KEY (ID)
 );
+
+
+-- create rta worker switch log table
+CREATE TABLE IF NOT EXISTS `rta_worker_switch_log` (
+    ID INT NOT NULL AUTO_INCREMENT,
+
+    log_fid VARCHAR(32) NOT NULL,
+    timestamp DATE NOT NULL,
+    goal_type VARCHAR(32) NOT NULL,
+    rta_status INT NOT NULL,
+
+    PRIMARY KEY (ID)
+);

@@ -175,6 +175,7 @@ cython_debug/
 
 # ignore sample anomaly_detection_log file
 !tests/static/sample_anomaly_detection.log
+!tests/static/sample_rta_worker_switch.log
 
 # ignore server volume dir
 volumes
