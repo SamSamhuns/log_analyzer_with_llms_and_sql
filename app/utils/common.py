@@ -69,3 +69,18 @@ def get_file_md5(file: Union[str, bytes], byte_chunk: int = 8192) -> str:
         logger.error(error_msg)
         raise NotImplementedError(error_msg)
     return hash_md5.hexdigest()
+
+
+def parse_num_str(string: str):
+    """
+    Parses a string to possibly extract a number.
+    Returns: The parsed number (int or float or the original if conversion not possible).
+    """
+    v = string
+    for conv in (int, float):
+        try:
+            v = conv(string)
+            break
+        except ValueError:
+            continue
+    return v
