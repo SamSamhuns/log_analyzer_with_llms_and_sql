@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS `general_fid` (
 
 -- create log file id table
 CREATE TABLE IF NOT EXISTS `log_fid` (
+    log_fid VARCHAR(32) NOT NULL,
     file_md5 VARCHAR(32) NOT NULL,
     inserted_date DATE NOT NULL,
     logfile_type VARCHAR(255) NOT NULL,

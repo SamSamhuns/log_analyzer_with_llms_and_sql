@@ -10,7 +10,7 @@ import traceback
 from typing import List, Dict
 from datetime import datetime
 
-from fastapi import APIRouter, File, UploadFile, status, HTTPException
+from fastapi import APIRouter, File, Form, UploadFile, status, HTTPException
 from langchain_community.document_loaders import (
     PyPDFLoader, TextLoader, JSONLoader, UnstructuredHTMLLoader)
 from langchain_chroma import Chroma
@@ -38,9 +38,11 @@ logger = logging.getLogger('upsert_route')
              summary="Extract info from log files and store them in a sql database")
 async def log_upsert(
         log_type: LogFileType,
+        log_file_id: str = Form(...),
         files: List[UploadFile] = File(...)):
     """
-    Extract info from log file(s) and store them in a sql database
+    Extract info from log file(s) and store them in a sql database.
+    log_file_id should be unique string identifier for log files 
     """
     status_code = status.HTTP_200_OK
     logfile_type = log_type.value
@@ -58,7 +60,8 @@ async def log_upsert(
                 continue
 
             # insert log file entry into log_fid table if it didn't exist
-            log_fid_obj = {"file_md5": fmd5,
+            log_fid_obj = {"log_fid": log_file_id,
+                           "file_md5": fmd5,
                            "inserted_date": datetime.now().strftime('%Y-%m-%d'),
                            "logfile_type": logfile_type,
                            "size": len(f_content) / 1024}  # size in KB
@@ -68,7 +71,7 @@ async def log_upsert(
             enc = json.detect_encoding(f_content)
             file_content_str = f_content.decode(enc)
             # get log object list from file contents using the appropriate logfile_type format
-            log_obj_list = gen_log_obj_list(file_content_str, logfile_id=fmd5, logfile_type=logfile_type)
+            log_obj_list = gen_log_obj_list(file_content_str, logfile_id=log_file_id, logfile_type=logfile_type)
             # insert contents of logfile into logfile_type table
             insertion_status = insert_bulk_data_into_sql(mysql_conn, tb_name=logfile_type, data_dicts=log_obj_list)
             if insertion_status["status"] == "failed":

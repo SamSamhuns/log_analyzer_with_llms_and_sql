@@ -15,9 +15,12 @@ async def test_log_upsert(
     """
     fpath, fcontent = mock_one_anomaly_det_log_file_path_and_content
     files = [("files", (fpath, fcontent, "text/plain"))]
-
+    data = {
+        "log_file_id": "test_logfile_id"
+    }
     response = await test_app_asyncio.post(
         "/upsert/logs?log_type=anomaly_detection_log",
+        data=data,
         files=files)
 
     data = response.json()
