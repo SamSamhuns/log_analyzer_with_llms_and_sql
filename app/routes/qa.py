@@ -4,7 +4,7 @@ Question Answer api endpoint
 import logging
 import traceback
 from typing import Dict
-from fastapi import APIRouter, status, HTTPException
+from fastapi import APIRouter, status, HTTPException, Form
 from langchain import hub
 from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
@@ -13,7 +13,7 @@ from langchain_core.runnables import RunnablePassthrough
 
 from api.langchain_custom.llms import load_llm
 from core.config import VECTOR_STORE_DIR
-from models.model import LLMModel, QueryRequest
+from models.model import LLMModel
 
 
 router = APIRouter()
@@ -24,7 +24,7 @@ logger = logging.getLogger('qa_route')
              status_code=status.HTTP_200_OK,
              summary="Extract query emb, find most similar embs from vector db & answer query with chatbot")
 async def question_answer(
-        question: QueryRequest,
+        query: str = Form(...),
         model: LLMModel = LLMModel.Llamafile.value):
     """Extract query emb, find most similar embs from vector db & answer query with chatbot"""
     status_code = status.HTTP_200_OK
@@ -44,9 +44,9 @@ async def question_answer(
             | StrOutputParser()
         )
 
-        retrieved_docs = rag_chain.invoke(question.query)["answer"]
+        retrieved_docs = rag_chain.invoke(query)["answer"]
         response_data = {"status": "success",
-                         "query": question.query,
+                         "query": query,
                          "retrieved_docs": retrieved_docs}
     except Exception as excep:
         logger.error("%s: %s", excep, traceback.print_exc())

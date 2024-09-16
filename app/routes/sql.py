@@ -4,11 +4,11 @@ SQL Question Answer api endpoint
 import logging
 import traceback
 from typing import Dict
-from fastapi import APIRouter, status, HTTPException
+from fastapi import APIRouter, status, HTTPException, Form
 
 from api.langchain_custom.text2sql import text_to_sql
 from api.mysql import run_sql_script, sep_query_and_params
-from models.model import SQLQueryParams, QueryRequest, LogFileType, LLMModel
+from models.model import SQLQueryParams, LogFileType, LLMModel
 from core.setup import mysql_conn, TEXT2SQL_CFG_DICT
 
 router = APIRouter()
@@ -54,7 +54,7 @@ async def sql_script(
              summary="Convert query into sql command & interact with SQL database")
 async def sql_question_answer(
         log_type: LogFileType,
-        question: QueryRequest,
+        question: str = Form(...),
         model: LLMModel = LLMModel.GPT_4o_Mini):
     """
     Converts query into sql command & interact with SQL database
@@ -69,7 +69,7 @@ async def sql_question_answer(
     try:
         text2sql_cfg_obj = TEXT2SQL_CFG_DICT[log_type.value]
         llm_sql_query = text_to_sql(
-            question=question.query,
+            question=question,
             text2sql_cfg_obj=text2sql_cfg_obj,
             llm_config={"model": model.value, "temperature": 0},
             top_k=text2sql_cfg_obj.top_k)
@@ -82,7 +82,7 @@ async def sql_question_answer(
                 mysql_conn, query, params, commit=not query.lower().startswith("select"))
             sql_data_response = {
                 "status": "success",
-                "question": question.query,
+                "question": question,
                 "query": llm_sql_query,
                 "response": sql_resp}
         except Exception as excep:
