@@ -1,12 +1,14 @@
-# Log Analyzer
+# Log Analyzer with LLMs and MySQL
 
 ![master](https://github.com/SamSamhuns/log_analyzer/actions/workflows/main.yml/badge.svg)
 
 [![Python 3.10](https://img.shields.io/badge/python-3.10-green.svg)](https://www.python.org/downloads/release/python-3100/)[![Python 3.11](https://img.shields.io/badge/python-3.11-green.svg)](https://www.python.org/downloads/release/python-3110/)[![Python 3.12](https://img.shields.io/badge/python-3.12-green.svg)](https://www.python.org/downloads/release/python-3120/)
 
-Backend with fastapi+uvicorn for log analysis with LLMs.
+Tested with `Docker version v27.0.3` and `Docker Compose version v2.29.1`.
 
-- [Log Analyzer](#log-analyzer)
+Backend with fastapi+uvicorn for log analysis with LLMs and MySQL queries.
+
+- [Log Analyzer with LLMs and MySQL](#log-analyzer-with-llms-and-mysql)
   - [API Architecture Setup](#api-architecture-setup)
   - [Setup](#setup)
     - [1. Create .env file](#1-create-env-file)
