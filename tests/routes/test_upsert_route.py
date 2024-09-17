@@ -1,6 +1,7 @@
 """
 Test upsert route
 """
+from typing import Tuple
 from pymysql.connections import Connection
 import pytest
 import httpx
@@ -8,8 +9,9 @@ import httpx
 
 @pytest.mark.asyncio
 async def test_log_upsert(
-        test_app_asyncio: httpx.AsyncClient, test_mysql_connec: Connection,
-        mock_one_anomaly_det_log_file_path_and_content):
+        test_app_asyncio: httpx.AsyncClient,
+        test_mysql_connec: Connection,
+        mock_one_anomaly_det_log_file_path_and_content: Tuple[str, bytes]):
     """
     Test one log upsert
     """
@@ -33,7 +35,9 @@ async def test_log_upsert(
 @pytest.mark.asyncio
 async def test_file_upsert_success(
         test_app_asyncio: httpx.AsyncClient,
-        test_mysql_connec: Connection):
+        test_mysql_connec: Connection,
+        mock_chroma_db,
+        mock_openai_emb):
     """Test the file_upsert endpoint"""
     files = [
         ("files", ("document.txt", b"TXT file content", "text/plain")),

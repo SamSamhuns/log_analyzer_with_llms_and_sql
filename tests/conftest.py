@@ -173,3 +173,21 @@ def mock_text_to_sql(mocker):
     mock_text2sql_resp = f"SELECT * FROM {MYSQL_TEST_ANOMALY_DET_LOG_TABLE} LIMIT 5;"
     mocker.patch('app.server.sql.text_to_sql', return_value=mock_text2sql_resp)
     return mock_text2sql_resp
+
+
+@pytest.fixture
+def mock_chroma_db(mocker):
+    """Mock Chroma db using a separate fixture"""
+    mock_chroma = mocker.MagicMock()
+    mocker.patch('app.server.upsert.Chroma')
+    mocker.patch('app.server.upsert.Chroma.from_documents')
+    return mock_chroma
+
+
+@pytest.fixture
+def mock_openai_emb(mocker):
+    """Mock OpenAIEmbeddings"""
+    mock_openai_emb = mocker.MagicMock()
+    mocker.patch('app.server.upsert.OpenAIEmbeddings')
+    return mock_openai_emb
+
