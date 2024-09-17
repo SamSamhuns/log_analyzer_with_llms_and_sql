@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS `anomaly_detection_log` (
     ID INT NOT NULL AUTO_INCREMENT,
 
     log_fid VARCHAR(32) NOT NULL,
-    timestamp DATE NOT NULL,
+    timestamp DATETIME(6) NOT NULL,
     inference_time FLOAT NOT NULL,
     prediction INT NOT NULL,
 
@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS `rta_worker_switch_log` (
     ID INT NOT NULL AUTO_INCREMENT,
 
     log_fid VARCHAR(32) NOT NULL,
-    timestamp DATE NOT NULL,
+    timestamp DATETIME(6) NOT NULL,
     goal_type VARCHAR(32) NOT NULL,
     rta_status INT NOT NULL,
 
