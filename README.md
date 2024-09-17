@@ -21,7 +21,7 @@ Backend with fastapi+uvicorn for log analysis with LLMs.
 
 ## API Architecture Setup
 
-[<img src="app/static/images/log analyzer.drawio.png">](https://link-to-your-URL/)
+[<img src="app/static/images/log analyzer.drawio.png">]()
 
 ## Setup
 
@@ -132,6 +132,8 @@ python app/server.py -p EXPOSED_HTTP_PORT
 The server will be available at <http://localhost:8080> if using the default port.
 
 ### Optional: frontend with streamlit
+
+[<img src="app/static/images/streamlit_example.png">]()
 
 ```shell
 pip install streamlit==1.38.0
