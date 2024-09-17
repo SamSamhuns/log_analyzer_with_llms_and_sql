@@ -101,12 +101,12 @@ jobs:
         run: |
             sudo echo "127.0.0.1  mysql" | sudo tee -a /etc/hosts
 
-      - name: Build Docker Compose services
+      - name: Build Docker Compose service images
         run: |
             docker compose build
             docker image prune -f
 
-      - name: Start Docker Compose & trt server services
+      - name: Start Docker Compose mysql server
         run: |
             mkdir -p volumes/log_analyzer
             mkdir -p volumes/store
@@ -119,5 +119,5 @@ jobs:
         run: |
           pytest tests
 
-      - name: Stop Docker Compose services
+      - name: Stop Docker Compose service
         run: docker compose down

@@ -1,5 +1,9 @@
 # Log Analyzer
 
+![master](https://github.com/SamSamhuns/log_analyzer/actions/workflows/main.yml/badge.svg)
+
+[![Python 3.10](https://img.shields.io/badge/python-3.10-green.svg)](https://www.python.org/downloads/release/python-3100/)[![Python 3.11](https://img.shields.io/badge/python-3.11-green.svg)](https://www.python.org/downloads/release/python-3110/)[![Python 3.12](https://img.shields.io/badge/python-3.12-green.svg)](https://www.python.org/downloads/release/python-3120/)
+
 Backend with fastapi+uvicorn for log analysis with LLMs.
 
 - [Log Analyzer](#log-analyzer)
