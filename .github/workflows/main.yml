@@ -112,7 +112,7 @@ jobs:
             mkdir -p volumes/store
             set -o allexport && source .env && set +o allexport
             docker compose up -d mysql
-            sleep 5
+            sleep 15
 
       - name: Run PyTest
         working-directory: .
