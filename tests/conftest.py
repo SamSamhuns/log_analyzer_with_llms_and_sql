@@ -3,7 +3,7 @@ Test configurations
 """
 import sys
 from io import BytesIO
-from datetime import date
+from datetime import datetime
 from typing import Callable, Tuple
 
 import httpx
@@ -28,6 +28,7 @@ from app.core.setup import mysql_conn, ANOMALY_DETECTION_LOG_TEXT2SQL_CFG
 upsert.MYSQL_LOG_ID_TB_NAME = MYSQL_TEST_LOG_ID_TB_NAME
 upsert.MYSQL_GENERAL_ID_TB_NAME = MYSQL_TEST_GENERAL_ID_TB_NAME
 from app.server import app  # must be import after changing all the core_config vars
+
 
 def _load_file_content(fpath: str) -> bytes:
     """
@@ -91,7 +92,7 @@ def gen_mock_anomaly_det_log_data() -> Callable:
         test_data = {
             'ID': fid,
             'log_fid': '2bd5f7de3578d0ecc13de276ea4a16d8',
-            'timestamp': date(2024, 8, 21),
+            'timestamp': datetime(2024, 8, 21, 0, 0),
             'inference_time': 50.12,
             'prediction': 1
         }

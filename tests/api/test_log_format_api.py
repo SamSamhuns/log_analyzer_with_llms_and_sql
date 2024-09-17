@@ -26,7 +26,7 @@ def test_gen_anomaly_detection_log_obj_list_valid(mock_valid_anomaly_det_log_str
     result = gen_anomaly_detection_log_obj_list(mock_valid_anomaly_det_log_str, logfile_id)
     assert len(result) == 2
     assert result[0]['log_fid'] == logfile_id
-    assert result[0]['timestamp'] == "2024-01-01"
+    assert result[0]['timestamp'] == "2024-01-01T12:00:00.000000"
     assert result[0]['inference_time'] == 100.0
     assert result[0]['prediction'] == 1
 
