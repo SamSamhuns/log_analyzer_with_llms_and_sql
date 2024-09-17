@@ -14,7 +14,7 @@ def gen_anomaly_detection_log_obj_list(log_file_content: str, logfile_id: str) -
     log_obj_list = []
     log_lines = log_file_content.splitlines()
     log_lines_skipped = 0
-    for log_line in log_lines:
+    for i, log_line in enumerate(log_lines):
         try:
             timestamp, inf_time, pred = log_line.split(",")
             iso_string = timestamp.strip().split()[0]
@@ -28,6 +28,7 @@ def gen_anomaly_detection_log_obj_list(log_file_content: str, logfile_id: str) -
                        "prediction": pred}
             log_obj_list.append(log_obj)
         except Exception as excep:
+            logger.debug("Skipped line %d due to error: %s", i, excep)
             log_lines_skipped += 1
 
     logger.info("%d lines skipped due to errors.", log_lines_skipped)
@@ -66,7 +67,7 @@ def gen_log_obj_list(log_file_content: str, logfile_id: str, logfile_type: str) 
     """
     Generate log object list based on the logfile type
     """
-    if logfile_type not in LogFileType:
+    if logfile_type not in set(item.value for item in LogFileType):
         raise NotImplementedError(f"logfile_type {logfile_type} not supported")
 
     if logfile_type == LogFileType.ANOMALY_DETECTION_LOG.value:
