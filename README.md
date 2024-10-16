@@ -24,6 +24,7 @@ Backend with fastapi+uvicorn for log analysis with LLMs and MySQL queries.
   - [Testing](#testing)
   - [For Developers](#for-developers)
     - [To change/add/delete new log table schemas](#to-changeadddelete-new-log-table-schemas)
+    - [Reference](#reference)
 
 ## API Architecture Setup
 
@@ -201,3 +202,8 @@ Editing Tests
 
 -   Edit `tests/conftests.py` for setting the correct values for the test database
 -   Edit `tests/api/test_mysql_api.py` for setting the correct values for the test database
+
+
+### Reference
+
+-   [Text-to-SQL by LLMs: A Benchmark Evaluation](https://arxiv.org/pdf/2308.15363)
