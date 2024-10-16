@@ -11,10 +11,9 @@ This file contains the main FastAPI server setup. It:
 
 Args:
     cfg (module): Configuration variables
-    users (module): Users API router
     upsert (module): Upsert API router
     qa (module): QA API router
-    sql_qa (module): SQL_qa API router
+    sql (module): SQL qa API router
     summarize (module): Summarize API router
 
 Returns:
