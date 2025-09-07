@@ -17,8 +17,8 @@ Backend with fastapi+uvicorn for log analysis with LLMs and MySQL queries.
     - [Option A) Docker Compose](#option-a-docker-compose)
       - [Note:](#note)
     - [Option B) Docker and local virtual env](#option-b-docker-and-local-virtual-env)
-      - [Option Bi) Uvicorn server with fastapi with Docker](#option-bi-uvicorn-server-with-fastapi-with-docker)
-      - [Option Bii) Uvicorn server with fastapi with venv](#option-bii-uvicorn-server-with-fastapi-with-venv)
+      - [Option Bi) uvicorn server with fastapi with Docker](#option-bi-uvicorn-server-with-fastapi-with-docker)
+      - [Option Bii) uvicorn server with fastapi with venv](#option-bii-uvicorn-server-with-fastapi-with-venv)
     - [Optional: frontend with streamlit](#optional-frontend-with-streamlit)
     - [Optional: expose app through ngrok docker for sharing localhost on the internet](#optional-expose-app-through-ngrok-docker-for-sharing-localhost-on-the-internet)
   - [Testing](#testing)
@@ -34,7 +34,7 @@ Backend with fastapi+uvicorn for log analysis with LLMs and MySQL queries.
 
 ### 1. Create .env file
 
-Create a `.env` file with the following keys with updated values for unames and pass:
+Create a `.env` file with the following keys with updated values for `usernames` and `passwords`:
 
 ```yaml
 # set to ERROR for deployment
@@ -90,9 +90,10 @@ The server will be available at <http://localhost:8080> if using the default por
 
 #### Note:
 
-When changing settings in `docker-compose.yaml` for the mongodb service, the existing docker and shared volumes might have to be purged i.e. when changing replicaset name.
+When changing settings in `docker-compose.yaml` for the mongodb service, the existing docker and shared volumes might have to be purged i.e. when changing `replicaset` name.
 
-<p style="color:red;">WARNING: This will delete all existing user, document, and vector records.</p> 
+> [!WARNING]
+> **This will delete all existing user, document, and vector records.**
 
 ```shell
 docker-compose down
@@ -109,7 +110,7 @@ docker compose build
 docker compose up -d mysql mysql-admin
 ```
 
-#### Option Bi) Uvicorn server with fastapi with Docker
+#### Option Bi) uvicorn server with fastapi with Docker
 
 Build server container and start server at HTTP port EXPOSED_HTTP_PORT
 
@@ -120,7 +121,7 @@ bash scripts/run_docker.sh -p EXPOSED_HTTP_PORT
 
 The server will be available at <http://localhost:8080> if using the default port.
 
-#### Option Bii) Uvicorn server with fastapi with venv
+#### Option Bii) uvicorn server with fastapi with venv
 
 Install requirements inside venv or conda environment
 
@@ -202,7 +203,6 @@ Editing Tests
 
 -   Edit `tests/conftests.py` for setting the correct values for the test database
 -   Edit `tests/api/test_mysql_api.py` for setting the correct values for the test database
-
 
 ### Reference
 
