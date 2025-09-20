@@ -1,6 +1,6 @@
 # Log Analyzer with LLMs and MySQL
 
-![master](https://github.com/SamSamhuns/log_analyzer/actions/workflows/main.yml/badge.svg)
+![master](https://github.com/SamSamhuns/log_analyzer/actions/workflows/main.yml/badge.svg)[![Codacy Badge](https://app.codacy.com/project/badge/Grade/e31ddf45ea7344b79f9432af619eaf08)](https://app.codacy.com/gh/SamSamhuns/log_analyzer_with_llms_and_sql/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
 [![Python 3.10](https://img.shields.io/badge/python-3.10-green.svg)](https://www.python.org/downloads/release/python-3100/)[![Python 3.11](https://img.shields.io/badge/python-3.11-green.svg)](https://www.python.org/downloads/release/python-3110/)[![Python 3.12](https://img.shields.io/badge/python-3.12-green.svg)](https://www.python.org/downloads/release/python-3120/)
 
