@@ -1,6 +1,5 @@
 services:
   log_analyzer:
-    container_name: log_analyzer_cont
     build:
       context: ./
       dockerfile: ./Dockerfile
@@ -20,7 +19,6 @@ services:
         condition: service_healthy
 
   mysql:
-    container_name: mariadb
     image: mariadb:11.5
     restart: always
     ports:
@@ -45,7 +43,6 @@ services:
       retries: 10
 
   mysql-admin:
-    container_name: mariadb-phpmyadmin
     image: phpmyadmin/phpmyadmin
     restart: always
     ports:

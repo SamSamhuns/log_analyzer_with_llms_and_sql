@@ -43,6 +43,7 @@ DEBUG_LEVEL=DEBUG
 API_SERVER_PORT=8080
 # openai api key
 OPENAI_API_KEY=<OPENAI_API_KEY>
+# alternative https://github.com/RayBytes/ChatMock
 # langchain langsmith keys
 USER_AGENT=log_analyzer
 LANGCHAIN_PROJECT=log_analyzer
@@ -123,9 +124,15 @@ The server will be available at <http://localhost:8080> if using the default por
 
 #### Option Bii) uvicorn server with fastapi with venv
 
-Install requirements inside venv or conda environment
+Install requirements:
 
 ```shell
+# With Poetry (Recommended)
+poetry install --all-groups
+```
+
+```shell
+# With venv / can also use conda environments
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
