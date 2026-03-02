@@ -1,7 +1,6 @@
 """
 Test configurations
 """
-import sys
 from io import BytesIO
 from datetime import datetime
 from typing import Callable, Tuple
@@ -9,9 +8,8 @@ from typing import Callable, Tuple
 import httpx
 import pytest
 import pytest_asyncio
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 from fastapi import UploadFile
-sys.path.append("app")
 
 # custom test settings
 MYSQL_TEST_ID = -3
@@ -190,4 +188,3 @@ def mock_openai_emb(mocker):
     mock_openai_emb = mocker.MagicMock()
     mocker.patch('app.server.upsert.OpenAIEmbeddings')
     return mock_openai_emb
-

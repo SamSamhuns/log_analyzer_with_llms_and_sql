@@ -14,4 +14,4 @@ async def test_server_root(test_app_asyncio: httpx.AsyncClient):
     response = await test_app_asyncio.get("/")
     assert response.status_code == 200
     assert response.json() == {
-        "Welcome to the Log Analysis service": "Please visit /docs for list of apis"}
+        "message": "Log Analyzer API is running. Visit /docs for API documentation."}

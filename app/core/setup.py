@@ -4,10 +4,10 @@ Setup connections
 from typing import Callable
 import pymysql
 from pymysql.cursors import DictCursor
-from models.model import LogFileType, LogText2SQLConfig
-from core.config import (
+from app.models.model import LogFileType, LogText2SQLConfig
+from app.core.config import (
     MYSQL_HOST, MYSQL_PORT, MYSQL_USER,
-    MYSQL_PASSWORD, MYSQL_DATABASE)
+    MYSQL_PASSWORD, MYSQL_DATABASE, MYSQL_CONNECT_TIMEOUT)
 from contextlib import contextmanager
 
 
@@ -19,6 +19,8 @@ def get_mysql_connection() -> pymysql.connections.Connection:
         user=MYSQL_USER,
         password=MYSQL_PASSWORD,
         db=MYSQL_DATABASE,
+        connect_timeout=MYSQL_CONNECT_TIMEOUT,
+        charset="utf8mb4",
         cursorclass=DictCursor)
 
 

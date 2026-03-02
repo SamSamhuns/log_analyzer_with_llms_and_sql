@@ -1,6 +1,5 @@
--- database and table names are acquired from env variables
-CREATE DATABASE IF NOT EXISTS `default`;
-USE `default`;
+-- Tables are initialized in the database configured by MYSQL_DATABASE
+-- from the MariaDB container environment.
 
 -- create general file id table for all supported file types
 CREATE TABLE IF NOT EXISTS `general_fid` (

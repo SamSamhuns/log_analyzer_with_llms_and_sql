@@ -1,7 +1,7 @@
 import logging
 from typing import List
 from datetime import datetime
-from models.model import LogFileType
+from app.models.model import LogFileType
 
 
 logger = logging.getLogger('log_format_api')
@@ -71,6 +71,7 @@ def gen_rta_worker_switch_log_obj_list(log_file_content: str, logfile_id: str) -
                        "rta_status": rta_status}
             log_obj_list.append(log_obj)
         except Exception as excep:
+            logger.debug("Skipped line due to error: %s", excep)
             log_lines_skipped += 1
 
     logger.info("%d lines skipped due to errors.", log_lines_skipped)

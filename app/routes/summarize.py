@@ -2,15 +2,14 @@
 Summarization api endpoints
 """
 import logging
-import traceback
 from typing import Dict, List
 from fastapi import APIRouter, File, UploadFile, status, HTTPException
 from langchain.chains.summarize import load_summarize_chain
 from langchain_community.document_loaders import WebBaseLoader
 
-from models.model import SummarizerMode, LLMModel
-from api.langchain_custom.llms import load_llm
-from api.langchain_custom.stream_document_loader import CustomStreamDocumentLoader
+from app.models.model import SummarizerMode, LLMModel
+from app.api.langchain_custom.llms import load_llm
+from app.api.langchain_custom.stream_document_loader import CustomStreamDocumentLoader
 
 router = APIRouter()
 logger = logging.getLogger('summarize_route')
@@ -26,9 +25,9 @@ async def summarize_files(
     """Extract text from files and summarize based on selected mode"""
     response_data = {}
     try:
-        print(f"Running summarization for files: {[file.filename for file in files]}")
-        llm = load_llm(model.value)
-        if summarizer_mode == "combined":
+        logger.info("Running summarization for files: %s", [file.filename for file in files])
+        llm = load_llm(model)
+        if summarizer_mode == SummarizerMode.COMBINED:
             # Combined summarization logic
             combined_docs = []
             for file in files:
@@ -56,7 +55,7 @@ async def summarize_files(
                 "detail": "Individual summarization successful",
                 "summaries": summaries}
     except Exception as excep:
-        logger.error("%s: %s", excep, traceback.print_exc())
+        logger.exception("failed to summarize files: %s", excep)
         detail = "Failed to summarize file contents in server"
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=detail) from excep
     return response_data
@@ -72,7 +71,7 @@ async def summarize_urls(
     status_code = status.HTTP_200_OK
     response_data = {}
     try:
-        llm = load_llm(model.value)
+        llm = load_llm(model)
         loader = WebBaseLoader(urls)
         docs = loader.load()
         chain = load_summarize_chain(llm, chain_type="stuff")
@@ -82,7 +81,7 @@ async def summarize_urls(
         summarization_results = {"status": "success", "summary": summary}
         response_data = summarization_results
     except Exception as excep:
-        logger.error("%s: %s", excep, traceback.print_exc())
+        logger.exception("failed to summarize urls: %s", excep)
         status_code = status.HTTP_400_BAD_REQUEST if status_code == status.HTTP_200_OK else status_code
         detail = response_data.get("detail", "failed to summarize url contents in server")
         raise HTTPException(status_code=status_code, detail=detail) from excep

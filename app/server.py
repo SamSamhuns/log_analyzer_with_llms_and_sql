@@ -1,136 +1,147 @@
-"""
-Main fastapi server file
-
-This file contains the main FastAPI server setup. It:
-- Creates the FastAPI app
-- Adds middleware (CORS, timing)
-- Mounts static files
-- Includes API routers
-- Defines an OpenAPI schema
-- Starts a Uvicorn server
-
-Args:
-    cfg (module): Configuration variables
-    upsert (module): Upsert API router
-    qa (module): QA API router
-    sql (module): SQL qa API router
-    summarize (module): Summarize API router
-
-Returns:
-    app (FastAPI): The FastAPI application object
-"""
-import os
-import time
+"""FastAPI server entrypoint."""
 import argparse
 import logging
+import time
+from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
 
-import core.config as cfg
-from routes import upsert, qa, summarize, sql
+import app.core.config as cfg
+from app.routes import qa, sql, summarize, upsert
+
+logger = logging.getLogger("log_analyzer_server")
+STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 
-def get_application():
-    """Returns a FastAPI app object.  
+def _patch_binary_upload_schema(node):
+    """Convert JSON Schema contentMediaType upload hints to OpenAPI binary format."""
+    if isinstance(node, dict):
+        if node.get("type") == "string" and node.get("contentMediaType") == "application/octet-stream":
+            node.pop("contentMediaType", None)
+            node["format"] = "binary"
+        for value in node.values():
+            _patch_binary_upload_schema(value)
+    elif isinstance(node, list):
+        for value in node:
+            _patch_binary_upload_schema(value)
 
-    Returns:
-        app (FastAPI): A FastAPI app object.
-    """
-    app = FastAPI(title=cfg.PROJECT_NAME,
-                  description=cfg.PROJECT_DESCRIPTION,
-                  debug=cfg.DEBUG,
-                  version=cfg.VERSION)
-    app.mount("/static", StaticFiles(directory="./app/static"), name="static")
+
+def create_application() -> FastAPI:
+    """Create and configure the FastAPI app."""
+    app = FastAPI(
+        title=cfg.PROJECT_NAME,
+        description=cfg.PROJECT_DESCRIPTION,
+        debug=cfg.DEBUG,
+        version=cfg.VERSION,
+    )
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
+        allow_origins=cfg.CORS_ALLOW_ORIGINS,
+        allow_credentials=cfg.CORS_ALLOW_CREDENTIALS,
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.include_router(upsert.router, prefix="/upsert", tags=["upsert"])
+    app.include_router(qa.router, prefix="/qa", tags=["qa"])
+    app.include_router(sql.router, prefix="/sql", tags=["sql"])
+    app.include_router(summarize.router, prefix="/summarize", tags=["summarize"])
+
+    def custom_openapi():
+        if app.openapi_schema:
+            return app.openapi_schema
+        schema = get_openapi(
+            title=cfg.PROJECT_NAME,
+            version=cfg.VERSION,
+            description=cfg.PROJECT_DESCRIPTION,
+            routes=app.routes,
+        )
+        _patch_binary_upload_schema(schema)
+        app.openapi_schema = schema
+        return app.openapi_schema
+
+    app.openapi = custom_openapi
     return app
 
 
-# Docs
-def custom_openapi():
-    """Returns the OpenAPI schema for the FastAPI app.
-
-    Returns:
-        openapi_schema (dict): The OpenAPI schema.
-    """
-    if app.openapi_schema:
-        return app.openapi_schema
-    openapi_schema = get_openapi(
-        title=cfg.PROJECT_NAME,
-        version=cfg.VERSION,
-        description=cfg.PROJECT_DESCRIPTION,
-        routes=app.routes,
-    )
-    app.openapi_schema = openapi_schema
-    return app.openapi_schema
+app = create_application()
 
 
-# logging
-logger = logging.getLogger("log_analyzer_server")
-
-# Routing
-app = get_application()
-app.include_router(upsert.router, prefix="/upsert", tags=["upsert"])
-app.include_router(qa.router, prefix="/qa", tags=["qa"])
-app.include_router(sql.router, prefix="/sql", tags=["sql"])
-app.include_router(summarize.router, prefix="/summarize", tags=["summarize"])
-app.openapi = custom_openapi
-
-
-# api call time middleware
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
-    """Adds an X-Process-Time header with the time taken to process the request.
-
-    Args:
-        request (Request): The request object.
-        call_next (coroutine): The next middleware or endpoint.
-    """
+    """Add per-request latency in response headers."""
     start_time = time.time()
     response = await call_next(request)
-    process_time = time.time() - start_time
-    response.headers["X-Process-Time"] = str(process_time)
+    response.headers["X-Process-Time"] = str(time.time() - start_time)
     return response
 
 
 @app.get("/")
 async def index():
-    """Returns a welcome message."""
-    return {"Welcome to the Log Analysis service": "Please visit /docs for list of apis"}
+    """Service root endpoint."""
+    return {"message": "Log Analyzer API is running. Visit /docs for API documentation."}
 
 
-@app.get('/favicon.ico')
+@app.get("/healthz")
+async def healthz():
+    """Kubernetes-style liveness endpoint."""
+    return {"status": "ok"}
+
+
+@app.get("/favicon.ico")
 async def favicon():
-    """Returns the favicon.ico file."""
-    file_name = "favicon.ico"
-    file_path = os.path.join(app.root_path, "app/static", file_name)
-    return FileResponse(path=file_path)
+    """Serve favicon for docs and browsers."""
+    return FileResponse(path=str(STATIC_DIR / "favicon.ico"))
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        """Start FastAPI with uvicorn server hosting log analyzer""")
-    parser.add_argument('--ip', '--host_ip', dest="host_ip", type=str, default="0.0.0.0",
-                        help='host ip address. (default: %(default)s)')
-    parser.add_argument('-p', '--port', type=int, default=cfg.API_SERVER_PORT,
-                        help='uvicorn port number. Overrides .env (default: %(default)s)')
-    parser.add_argument('-w', '--workers', type=int, default=1,
-                        help="number of uvicorn workers. (default: %(default)s)")
-    parser.add_argument('-r', '--reload', action='store_true',
-                        help="reload based on reload dir. (default: %(default)s)")
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser("Start FastAPI with Uvicorn")
+    parser.add_argument(
+        "--ip",
+        "--host_ip",
+        dest="host_ip",
+        type=str,
+        default="0.0.0.0",
+        help="host ip address. (default: %(default)s)",
+    )
+    parser.add_argument(
+        "-p",
+        "--port",
+        type=int,
+        default=cfg.API_SERVER_PORT,
+        help="uvicorn port number. Overrides .env (default: %(default)s)",
+    )
+    parser.add_argument(
+        "-w",
+        "--workers",
+        type=int,
+        default=1,
+        help="number of uvicorn workers. (default: %(default)s)",
+    )
+    parser.add_argument(
+        "-r",
+        "--reload",
+        action="store_true",
+        help="enable reload in dev mode. (default: %(default)s)",
+    )
     args = parser.parse_args()
     args.reload = False if args.workers > 1 else args.reload
-
-    logger.info("Uvicorn server running on %s:%s with %s workers", args.host_ip, args.port, args.workers)
-    uvicorn.run("server:app", host=args.host_ip, port=args.port,
-                workers=args.workers, reload=args.reload, reload_dirs=['app'])
+    logger.info(
+        "Starting uvicorn on %s:%s with %s worker(s)",
+        args.host_ip,
+        args.port,
+        args.workers,
+    )
+    uvicorn.run(
+        "app.server:app",
+        host=args.host_ip,
+        port=args.port,
+        workers=args.workers,
+        reload=args.reload,
+        reload_dirs=["app"],
+    )

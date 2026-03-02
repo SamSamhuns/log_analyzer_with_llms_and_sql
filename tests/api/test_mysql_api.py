@@ -123,7 +123,7 @@ def test_run_update_sql_script(test_mysql_connec: Connection):
     """Update a record and check the changes"""
     update_script = f"UPDATE {MYSQL_TEST_ANOMALY_DET_LOG_TABLE} SET prediction = %s WHERE ID = %s"
     params = (100, MYSQL_TEST_ID - 1)  # Change prediction for ID MYSQL_TEST_ID - 1
-    response = run_sql_script(test_mysql_connec, update_script, params)
+    response = run_sql_script(test_mysql_connec, update_script, params, commit=True, allow_write=True)
     assert response["status"] == "success"
     assert "SQL script executed and committed successfully" in response["message"]
 

@@ -9,15 +9,17 @@ from app.utils.common import timeit_decorator
 DEBUG: bool = os.environ.get("DEBUG", "") != "False"
 
 
-def query_api_online(payload: str, hf_api_tkn: str, hf_api_url: str, timeout: float = 30) -> dict:
+def query_api_online(payload: dict, hf_api_tkn: str, hf_api_url: str, timeout: float = 30) -> dict:
     """
     Get embedding of the payload text using an online api endpoint
     Input sequence token length > 256 word pieces are truncated
     The following url returns a vector of length 384 and by default input text longer than 256 word pieces is truncated.
     https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2#:~:text=The%20sentence%20vector%20may%20be,256%20word%20pieces%20is%20truncated.
     """
-    headers = {"Authorization": f"Bearer {hf_api_tkn}"}
-    headers = {"accept": "application/json"}
+    headers = {
+        "Authorization": f"Bearer {hf_api_tkn}",
+        "accept": "application/json",
+    }
     response = requests.post(hf_api_url, headers=headers, json=payload, timeout=timeout)
     return response.json()
 

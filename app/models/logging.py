@@ -21,71 +21,66 @@ class LogConfig(BaseModel):
     ERROR_FILE_PATH: str = "error.log"
 
     # Fetch debug level from environment variable or default to 'DEBUG' if not set
-    DEBUG_LEVEL: str = os.getenv('DEBUG_LEVEL', 'DEBUG')
+    DEBUG_LEVEL: str = os.getenv("DEBUG_LEVEL", "INFO").upper()
 
     # Logging config
     version: int = 1
     disable_existing_loggers: bool = False
     formatters: dict = {
-        'info': {
+        "info": {
             "()": "uvicorn.logging.DefaultFormatter",
             "fmt": "%(levelprefix)s | %(asctime)s | %(name)s | %(message)s",
             "datefmt": "%Y-%m-%d %H:%M:%S",
         },
-        'error': {
+        "error": {
             "()": "uvicorn.logging.DefaultFormatter",
-            "fmt": '%(levelprefix)s | %(asctime)s | %(name)s | %(process)d::%(module)s|%(lineno)s:: %(message)s',
+            "fmt": (
+                "%(levelprefix)s | %(asctime)s | %(name)s | "
+                "%(process)d::%(module)s|%(lineno)s:: %(message)s"
+            ),
             "datefmt": "%Y-%m-%d %H:%M:%S",
         },
     }
     handlers: dict = {
-        'debug_console_handler': {
-            'level': DEBUG_LEVEL,
-            'formatter': 'info',
-            'class': 'logging.StreamHandler',
-            'stream': 'ext://sys.stdout',
+        "debug_console_handler": {
+            "level": DEBUG_LEVEL,
+            "formatter": "info",
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stdout",
         },
-        'info_rotating_file_handler': {
-            'level': 'INFO', # Log all levels form INFO & above to file
-            'formatter': 'info',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': INFO_FILE_PATH,
-            'mode': 'a',
-            'maxBytes': 1048576,
-            'backupCount': 10
+        "info_rotating_file_handler": {
+            "level": "INFO",
+            "formatter": "info",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": INFO_FILE_PATH,
+            "mode": "a",
+            "maxBytes": 1048576,
+            "backupCount": 10,
         },
-        'warning_file_handler': {
-            'level': 'WARNING',
-            'formatter': 'info',
-            'class': 'logging.FileHandler',
-            'filename': ERROR_FILE_PATH,
-            'mode': 'a',
-        },
-        'error_file_handler': {
-            'level': 'ERROR',
-            'formatter': 'error',
-            'class': 'logging.FileHandler',
-            'filename': ERROR_FILE_PATH,
-            'mode': 'a',
-        },
-        'critical_mail_handler': {
-            'level': 'CRITICAL',
-            'formatter': 'error',
-            'class': 'logging.handlers.SMTPHandler',
-            'mailhost' : 'localhost',
-            'fromaddr': 'monitoring@domain.com',
-            'toaddrs': ['dev@domain.com', 'qa@domain.com'],
-            'subject': 'Critical error with application name'
+        "error_file_handler": {
+            "level": "ERROR",
+            "formatter": "error",
+            "class": "logging.FileHandler",
+            "filename": ERROR_FILE_PATH,
+            "mode": "a",
         },
     }
     loggers: dict = {
-        '': {  # root logger
-            'level': DEBUG_LEVEL,
-            'handlers': ['debug_console_handler', 'info_rotating_file_handler', 'error_file_handler', 'critical_mail_handler'],
+        "": {
+            "level": DEBUG_LEVEL,
+            "handlers": [
+                "debug_console_handler",
+                "info_rotating_file_handler",
+                "error_file_handler",
+            ],
         },
-        'log_analyzer': {
-            'level': 'INFO',
-            'propagate': False,
-            'handlers': ['debug_console_handler', 'info_rotating_file_handler', 'error_file_handler'],
+        "log_analyzer": {
+            "level": "INFO",
+            "propagate": False,
+            "handlers": [
+                "debug_console_handler",
+                "info_rotating_file_handler",
+                "error_file_handler",
+            ],
         },
     }

@@ -18,7 +18,7 @@ def text_to_sql(
         text2sql_cfg_obj: object,
         llm_config: dict,
         top_k: int = 5,
-        verbose: bool = True) -> str:
+        verbose: bool = False) -> str:
     """
     Convert plain text to sql using LLM
     Parameters:
@@ -49,6 +49,7 @@ def text_to_sql(
         .invoke({"input": question,
                  "table_name": text2sql_cfg_obj.table_name})
 
-    my_sql_query = sql_query.SQLQuery
-    my_sql_query.replace("\"", '')
+    my_sql_query = sql_query.SQLQuery.replace("\"", "").strip()
+    if my_sql_query.startswith("```"):
+        my_sql_query = my_sql_query.replace("```sql", "").replace("```", "").strip()
     return my_sql_query

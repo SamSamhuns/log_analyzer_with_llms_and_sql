@@ -13,6 +13,12 @@ class SQLQueryParams(BaseModel):
     """
     query: str
     params: Optional[List[Any]] = None
+    allow_write: bool = False
+
+
+class QARequest(BaseModel):
+    """Request body for retrieval QA."""
+    query: str
 
 
 class SummarizerMode(str, Enum):
@@ -31,7 +37,7 @@ class LogFileType(str, Enum):
     RTA_WORKER_SWITCH_LOG = "rta_worker_switch_log"
 
 
-class LLMModel(Enum):
+class LLMModel(str, Enum):
     """
     LLM Model Types
     """
@@ -43,6 +49,13 @@ class LLMModel(Enum):
     GPT_4o_Mini: str = "gpt-4o-mini"
     # most be locally hosted in the same env as the server
     Llamafile: str = "llamafile"
+
+
+class SQLQARequest(BaseModel):
+    """Request body for text-to-SQL QA."""
+    log_type: LogFileType
+    question: str
+    model: LLMModel = LLMModel.GPT_4o_Mini
 
 
 class LogText2SQLConfig(ABC):

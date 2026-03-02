@@ -4,60 +4,72 @@
 
 [![Python 3.10](https://img.shields.io/badge/python-3.10-green.svg)](https://www.python.org/downloads/release/python-3100/)[![Python 3.11](https://img.shields.io/badge/python-3.11-green.svg)](https://www.python.org/downloads/release/python-3110/)[![Python 3.12](https://img.shields.io/badge/python-3.12-green.svg)](https://www.python.org/downloads/release/python-3120/)
 
-Tested with `Docker version v27.0.3` and `Docker Compose version v2.29.1`.
-
-Backend with fastapi+uvicorn for log analysis with LLMs and MySQL queries.
-
 - [Log Analyzer with LLMs and MySQL](#log-analyzer-with-llms-and-mysql)
-  - [API Architecture Setup](#api-architecture-setup)
+  - [Architecture](#architecture)
   - [Setup](#setup)
-    - [1. Create .env file](#1-create-env-file)
-    - [2. Create shared volumes directory](#2-create-shared-volumes-directory)
-  - [Running the log analysis service](#running-the-log-analysis-service)
-    - [Option A) Docker Compose](#option-a-docker-compose)
-      - [Note:](#note)
-    - [Option B) Docker and local virtual env](#option-b-docker-and-local-virtual-env)
-      - [Option Bi) uvicorn server with fastapi with Docker](#option-bi-uvicorn-server-with-fastapi-with-docker)
-      - [Option Bii) uvicorn server with fastapi with venv](#option-bii-uvicorn-server-with-fastapi-with-venv)
-    - [Optional: frontend with streamlit](#optional-frontend-with-streamlit)
-    - [Optional: expose app through ngrok docker for sharing localhost on the internet](#optional-expose-app-through-ngrok-docker-for-sharing-localhost-on-the-internet)
+    - [1. Create `.env` with `cp .env.example .env`](#1-create-env-with-cp-envexample-env)
+    - [2. Create local volume dirs](#2-create-local-volume-dirs)
+  - [Option A) Run with Docker Compose](#option-a-run-with-docker-compose)
+  - [Option Bi) Run API Locally (without API container)](#option-bi-run-api-locally-without-api-container)
+  - [Option Bii) Alternative uvicorn server with Docker](#option-bii-alternative-uvicorn-server-with-docker)
+  - [Streamlit Frontend (optional)](#streamlit-frontend-optional)
+  - [API Contract Notes](#api-contract-notes)
+    - [`POST /qa`](#post-qa)
+    - [`POST /sql/qa`](#post-sqlqa)
+    - [`POST /sql/script`](#post-sqlscript)
   - [Testing](#testing)
-  - [For Developers](#for-developers)
-    - [To change/add/delete new log table schemas](#to-changeadddelete-new-log-table-schemas)
-    - [Reference](#reference)
+    - [Optional: expose app through ngrok docker for sharing localhost on the internet](#optional-expose-app-through-ngrok-docker-for-sharing-localhost-on-the-internet)
+  - [Developer Notes](#developer-notes)
+  - [Reference](#reference)
 
-## API Architecture Setup
+Backend service for log analysis using FastAPI, LangChain, Chroma, and MariaDB.
+
+## Architecture
 
 [<img src="app/static/images/log analyzer.drawio.png">]()
 
+- FastAPI API server (`app.server`)
+- MariaDB for structured log storage
+- Chroma for embedding/vector retrieval
+- Optional Streamlit frontend (`app/streamlit_frontend.py`)
+
 ## Setup
 
-### 1. Create .env file
+### 1. Create `.env` with `cp .env.example .env`
 
-Create a `.env` file with the following keys with updated values for `usernames` and `passwords`:
-
-```yaml
-# set to ERROR for deployment
-DEBUG_LEVEL=DEBUG
-# http api server
+```env
+# API
+# Set to ERROR for deployment
+DEBUG=false
+DEBUG_LEVEL=INFO
 API_SERVER_PORT=8080
-# openai api key
+PROJECT_NAME=Log Analyzer API
+PROJECT_DESCRIPTION=Log analysis with FastAPI, LangChain, and MariaDB.
+API_VERSION=0.2.0
+CORS_ALLOW_ORIGINS=http://localhost,http://127.0.0.1
+CORS_ALLOW_CREDENTIALS=false
+
+# OpenAI / LangChain
+# alternative for openai api: https://github.com/RayBytes/ChatMock
 OPENAI_API_KEY=<OPENAI_API_KEY>
-# alternative https://github.com/RayBytes/ChatMock
-# langchain langsmith keys
 USER_AGENT=log_analyzer
 LANGCHAIN_PROJECT=log_analyzer
 LANGCHAIN_TRACING_V2=true
 LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
 LANGCHAIN_API_KEY=<LANGCHAIN_API_KEY>
-# mysql mariadb
+
+# SQL safety (keep false unless explicitly needed)
+ALLOW_UNSAFE_SQL_SCRIPTS=false
+
+# MariaDB
 MYSQL_HOST=mysql
 MYSQL_PORT=3306
 MYSQL_USER=user
 MYSQL_PASSWORD=pass
 MYSQL_DATABASE=default
 MYSQL_ROOT_PASSWORD=admin
-# phpmyadmin mariadb
+
+# phpMyAdmin
 PMA_GUI_PORT=8001
 PMA_HOST=${MYSQL_HOST}
 PMA_PORT=${MYSQL_PORT}
@@ -65,64 +77,35 @@ PMA_USER=${MYSQL_USER}
 PMA_PASSWORD=${MYSQL_PASSWORD}
 ```
 
-### 2. Create shared volumes directory
+### 2. Create local volume dirs
 
-```shell
+```bash
 mkdir -p volumes/log_analyzer
 mkdir -p volumes/store
 ```
 
-## Running the log analysis service
+## Option A) Run with Docker Compose
 
-There are two options for running the analysis service. Both require `docker compose` (Available from the [official docker site](https://docs.docker.com/compose/install/)). `$docker-compose ...` style commands have been depreciated.
-
-### Option A) Docker Compose
-
-Note: some services are set to bind to all addresses which should be changed in a production environment.
-
-```shell
-# build all required containers
+```bash
 docker compose build
-# start all services
 docker compose up -d
 ```
 
-The server will be available at <http://localhost:8080> if using the default port.
+API: <http://localhost:8080>
 
-#### Note:
+Optional phpMyAdmin profile:
 
-When changing settings in `docker-compose.yaml` for the mongodb service, the existing docker and shared volumes might have to be purged i.e. when changing `replicaset` name.
-
-> [!WARNING]
-> **This will delete all existing user, document, and vector records.**
-
-```shell
-docker-compose down
-docker volume rm $(docker volume ls -q)
-rm -rf volumes/store
+```bash
+docker compose --profile admin up -d mysql-admin
 ```
 
-### Option B) Docker and local virtual env
+## Option Bi) Run API Locally (without API container)
 
-```shell
-# build all required containers
-docker compose build
-# start mysql server & phpmyadmin server
-docker compose up -d mysql mysql-admin
+Start DB services:
+
+```bash
+docker compose up -d mysql
 ```
-
-#### Option Bi) uvicorn server with fastapi with Docker
-
-Build server container and start server at HTTP port EXPOSED_HTTP_PORT
-
-```shell
-bash scripts/build_docker.sh
-bash scripts/run_docker.sh -p EXPOSED_HTTP_PORT
-```
-
-The server will be available at <http://localhost:8080> if using the default port.
-
-#### Option Bii) uvicorn server with fastapi with venv
 
 Install requirements:
 
@@ -138,21 +121,76 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Start server at HTTP port EXPOSED_HTTP_PORT. Note the host names must contain addresses when using docker microservices and the fastapi+uvicorn server outside the docker compose environment.
+Run API:
 
-```shell
-python app/server.py -p EXPOSED_HTTP_PORT
+```bash
+poetry run uvicorn app.server:app --host 0.0.0.0 --port 8080 --reload
 ```
 
-The server will be available at <http://localhost:8080> if using the default port.
+## Option Bii) Alternative uvicorn server with Docker
 
-### Optional: frontend with streamlit
+```bash
+bash scripts/build_docker.sh
+bash scripts/run_docker.sh -p 8080
+```
+
+## Streamlit Frontend (optional)
 
 [<img src="app/static/images/streamlit_example.png">]()
 
-```shell
+```bash
 pip install streamlit==1.38.0
 streamlit run app/streamlit_frontend.py
+```
+
+## API Contract Notes
+
+### `POST /qa`
+
+Request body:
+
+```json
+{
+  "query": "What happened in the uploaded logs?"
+}
+```
+
+Optional query param: `model=gpt-4o-mini`
+
+### `POST /sql/qa`
+
+Request body:
+
+```json
+{
+  "log_type": "anomaly_detection_log",
+  "question": "Give me the latest 5 records",
+  "model": "gpt-4o-mini"
+}
+```
+
+### `POST /sql/script`
+
+Request body:
+
+```json
+{
+  "query": "SELECT * FROM anomaly_detection_log LIMIT %s",
+  "params": [10]
+}
+```
+
+- Read-only SQL is enforced by default.
+- Write SQL requires both:
+  - `allow_write: true` in request body
+  - `ALLOW_UNSAFE_SQL_SCRIPTS=true` on server
+
+## Testing
+
+```bash
+poetry run pytest tests/
+poetry run coverage run -m pytest tests/
+poetry run coverage report -m -i
 ```
 
 ### Optional: expose app through ngrok docker for sharing localhost on the internet
@@ -170,47 +208,16 @@ docker run --net=host -it -e NGROK_AUTHTOKEN=<NGROK_AUTHTOKEN> ngrok/ngrok:lates
 docker run -it -e NGROK_AUTHTOKEN=<NGROK_AUTHTOKEN> ngrok/ngrok:latest http host.docker.internal:<EXPOSED_HTTP_PORT>
 ```
 
-## Testing
 
-Note: all the microservices must already be running with docker compose.
+## Developer Notes
 
-Install requirements:
+When adding a new log table schema, update:
 
-```shell
-pip install -r tests/requirements.txt
-```
+- `app/static/sql/init.sql`
+- `app/models/model.py` (`LogFileType`)
+- `app/api/log_format/log_parser.py`
+- `app/core/setup.py` (`TEXT2SQL_CFG_DICT` and prompt metadata)
 
-Run tests:
+## Reference
 
-```shell
-pytest tests/
-```
-
-Generating coverage reports
-
-```shell
-coverage run -m pytest tests/
-coverage report -m -i
-```
-
-## For Developers
-
-### To change/add/delete new log table schemas
-
-The new SQL table should also be created through the PHPMyAdmin GUI/mysql command line inside the mariadb container.
-
-The following files must be edited.
-
--   Edit `app/static/sql/init.sql` for changing/adding log table schema
--   Edit `app/models/model.py` to add/edit the LogFileType
--   Edit `app/api/log_format/log_parser.py` for parsing logs
--   Edit `app/core/setup.py` for adding table schema and data sample info for text2sql conversion
-
-Editing Tests
-
--   Edit `tests/conftests.py` for setting the correct values for the test database
--   Edit `tests/api/test_mysql_api.py` for setting the correct values for the test database
-
-### Reference
-
--   [Text-to-SQL by LLMs: A Benchmark Evaluation](https://arxiv.org/pdf/2308.15363)
+- [Text-to-SQL by LLMs: A Benchmark Evaluation](https://arxiv.org/pdf/2308.15363)

@@ -6,7 +6,6 @@ import os.path as osp
 import json
 import uuid
 import logging
-import traceback
 from typing import List, Dict
 from datetime import datetime
 
@@ -17,13 +16,13 @@ from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from api.langchain_custom.stream_document_loader import CustomStreamDocumentLoader
-from api.mysql import entries_exist, insert_data_into_sql, insert_bulk_data_into_sql
-from api.log_format.log_parser import gen_log_obj_list
-from models.model import LogFileType
-from utils.common import get_file_md5
-from core.setup import mysql_conn
-from core.config import (
+from app.api.langchain_custom.stream_document_loader import CustomStreamDocumentLoader
+from app.api.mysql import entries_exist, insert_data_into_sql, insert_bulk_data_into_sql
+from app.api.log_format.log_parser import gen_log_obj_list
+from app.models.model import LogFileType
+from app.utils.common import get_file_md5
+from app.core.setup import mysql_conn
+from app.core.config import (
     FILE_STORAGE_DIR, VECTOR_STORE_DIR,
     MYSQL_LOG_ID_TB_NAME, MYSQL_GENERAL_ID_TB_NAME)
 
@@ -48,9 +47,10 @@ async def log_upsert(
     logfile_type = log_type.value
     response_data = {}
     logged_files = []
+    total_upserted_entries = 0
     try:
         for file in files:
-            f_content = file.file.read()
+            f_content = await file.read()
             f_name = file.filename
 
             # check if file alr exists in the db using md5sum
@@ -65,22 +65,32 @@ async def log_upsert(
                            "inserted_date": datetime.now().strftime('%Y-%m-%d'),
                            "logfile_type": logfile_type,
                            "size": len(f_content) / 1024}  # size in KB
-            insert_data_into_sql(mysql_conn, tb_name=MYSQL_LOG_ID_TB_NAME, data_dict=log_fid_obj)
+            insertion_status = insert_data_into_sql(
+                mysql_conn,
+                tb_name=MYSQL_LOG_ID_TB_NAME,
+                data_dict=log_fid_obj,
+            )
+            if insertion_status["status"] == "failed":
+                raise ValueError(insertion_status["message"])
 
             # decode txt file contents
             enc = json.detect_encoding(f_content)
             file_content_str = f_content.decode(enc)
             # get log object list from file contents using the appropriate logfile_type format
             log_obj_list = gen_log_obj_list(file_content_str, logfile_id=log_file_id, logfile_type=logfile_type)
+            if not log_obj_list:
+                logger.warning("%s contains no valid log lines for %s", f_name, logfile_type)
+                continue
             # insert contents of logfile into logfile_type table
             insertion_status = insert_bulk_data_into_sql(mysql_conn, tb_name=logfile_type, data_dicts=log_obj_list)
             if insertion_status["status"] == "failed":
-                raise Exception(insertion_status["message"])
+                raise ValueError(insertion_status["message"])
 
+            total_upserted_entries += len(log_obj_list)
             logged_files.append(f_name)
         if len(logged_files) > 0:
             response_data["status"] = "success"
-            response_data["detail"] = f"uploaded and upserted {len(log_obj_list)} entries " + \
+            response_data["detail"] = f"uploaded and upserted {total_upserted_entries} entries " + \
                 f"from {len(files)} file(s) into the sql table."
             if len(logged_files) != len(files):
                 response_data["detail"] += \
@@ -90,7 +100,7 @@ async def log_upsert(
             response_data["status"] = "failed"
             response_data["detail"] = "uploaded file(s) could not be uploaded or already exist in system"
     except Exception as excep:
-        logger.error("%s: %s", excep, traceback.print_exc())
+        logger.exception("failed to upsert log files: %s", excep)
         status_code = status.HTTP_400_BAD_REQUEST if status_code == status.HTTP_200_OK else status_code
         detail = response_data.get("detail", "failed to upload files to server")
         raise HTTPException(status_code=status_code, detail=detail) from excep
@@ -110,13 +120,13 @@ async def file_upsert(
     emb_files = []
     try:
         for file in files:
-            file_ext = os.path.splitext(file.filename)[1]
+            file_ext = os.path.splitext(file.filename)[1].lower()
             if file_ext not in SUPPORTED_FILES_EXT:
                 response_data["detail"] = \
                     f"Only files with extensions {SUPPORTED_FILES_EXT} supported. {file.filename} is invalid"
                 raise ValueError(response_data["detail"])
 
-            f_content = file.file.read()
+            f_content = await file.read()
             f_name = file.filename
             fmd5 = get_file_md5(f_content)
             if entries_exist(mysql_conn, MYSQL_GENERAL_ID_TB_NAME, {"file_md5": fmd5}):
@@ -128,7 +138,13 @@ async def file_upsert(
                        "inserted_date": datetime.now().strftime('%Y-%m-%d'),
                        "file_type": file_ext,
                        "size": len(f_content) / 1024}  # size in KB
-            insert_data_into_sql(mysql_conn, tb_name=MYSQL_GENERAL_ID_TB_NAME, data_dict=fid_obj)
+            insertion_status = insert_data_into_sql(
+                mysql_conn,
+                tb_name=MYSQL_GENERAL_ID_TB_NAME,
+                data_dict=fid_obj,
+            )
+            if insertion_status["status"] == "failed":
+                raise ValueError(insertion_status["message"])
 
             doc_id = str(uuid.uuid4())
             fsave_path = osp.join(FILE_STORAGE_DIR, doc_id + osp.splitext(f_name)[-1])
@@ -167,7 +183,7 @@ async def file_upsert(
             response_data["status"] = "failed"
             response_data["detail"] = "uploaded file(s) could not be uploaded or already exist in system"
     except Exception as excep:
-        logger.error("%s: %s", excep, traceback.print_exc())
+        logger.exception("failed to upsert files: %s", excep)
         status_code = status.HTTP_400_BAD_REQUEST if status_code == status.HTTP_200_OK else status_code
         detail = response_data.get("detail", "failed to upload files to server")
         raise HTTPException(status_code=status_code, detail=detail) from excep

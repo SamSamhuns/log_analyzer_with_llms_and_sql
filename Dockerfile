@@ -1,44 +1,29 @@
-FROM --platform=linux/amd64 python:3.10
+FROM python:3.12-slim
 
-# install python-venv reqs
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    APP_HOME=/app
+
+WORKDIR ${APP_HOME}
+
+# lightweight runtime deps only
 RUN apt-get update --no-install-recommends \
-    && apt-get install python3-venv --no-install-recommends -y
+    && apt-get install --no-install-recommends -y gcc \
+    && rm -rf /var/lib/apt/lists/*
 
-# set username & uid inside docker
-ARG UNAME=user1
-ARG UID=1000
-ENV WORKDIR="/home/$UNAME/log_analyzer"
+COPY requirements.txt ./requirements.txt
+RUN pip install --upgrade pip \
+    && pip install --default-timeout=100 -r ./requirements.txt
 
-# add user UNAME as a member of the sudoers group
-RUN useradd -rm --home-dir "/home/$UNAME" --shell /bin/bash -g root -G sudo -u "$UID" "$UNAME"
+COPY app ./app
+COPY pyproject.toml README.md ./
 
-# set workdir
-WORKDIR ${WORKDIR}
+RUN useradd --create-home --shell /bin/bash appuser \
+    && mkdir -p /app/volumes/log_analyzer \
+    && chown -R appuser:appuser /app
 
-# setup python env vars & virtual env
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONBUFFERED=1
+USER appuser
+EXPOSE 8080
 
-ENV VIRTUAL_ENV="/home/$UNAME/venv"
-RUN python3 -m venv $VIRTUAL_ENV
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-
-# Install python dependencies
-RUN pip install pip==24.2
-COPY requirements.txt  "$WORKDIR/requirements.txt"
-RUN pip install --no-cache-dir --default-timeout=100 -r "$WORKDIR/requirements.txt"
-
-# remove cache
-RUN pip cache purge \
-    && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/* \
-    && rm -rf /root/.cache/pip
-
-# copy all files to src & exclude those in dockerignore
-COPY . "$WORKDIR"
-
-# change file ownership to docker user
-RUN chown -R "$UNAME" "$WORKDIR"
-
-USER "$UNAME"
-CMD ["python", "app/server.py", "--port", "8080"]
+CMD ["uvicorn", "app.server:app", "--host", "0.0.0.0", "--port", "8080"]

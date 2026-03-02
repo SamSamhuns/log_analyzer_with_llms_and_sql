@@ -1,12 +1,15 @@
 """
 pymysql api functions
 """
-from typing import List, Tuple
+from typing import List, Tuple, Sequence
 import re
 import logging
 import pymysql
 
 logger = logging.getLogger('mysql_api')
+
+READ_ONLY_SQL_PREFIXES = ("SELECT", "WITH", "SHOW", "DESCRIBE", "EXPLAIN")
+ALWAYS_BLOCKED_SQL_TOKENS = ( "DROP", "TRUNCATE", "ALTER", "CREATE", "GRANT", "REVOKE", "LOCK", "UNLOCK",)
 
 
 def sep_query_and_params(query: str) -> Tuple[str, Tuple]:
@@ -38,17 +41,69 @@ def sep_query_and_params(query: str) -> Tuple[str, Tuple]:
     return query_with_placeholders, tuple(params)
 
 
-def is_sql_allowed(sql_script: str, restricted_cmds: List = None) -> bool:
-    """
-    Simple validation to check for restricted commands in SQL script.
-    """
-    for command in restricted_cmds:
-        if command in sql_script.upper():
-            return False
-    return True
+def _split_sql_statements(sql_script: str) -> List[str]:
+    """Split SQL script into statements while respecting quoted strings."""
+    statements = []
+    current = []
+    in_single_quote = False
+    in_double_quote = False
+
+    for ch in sql_script:
+        if ch == "'" and not in_double_quote:
+            in_single_quote = not in_single_quote
+        elif ch == '"' and not in_single_quote:
+            in_double_quote = not in_double_quote
+        if ch == ";" and not in_single_quote and not in_double_quote:
+            statement = "".join(current).strip()
+            if statement:
+                statements.append(statement)
+            current = []
+            continue
+        current.append(ch)
+
+    trailing = "".join(current).strip()
+    if trailing:
+        statements.append(trailing)
+    return statements
 
 
-def run_sql_script(mysql_conn, sql_script: str, params: tuple = None, commit: bool = True) -> dict:
+def validate_sql_script(sql_script: str, allow_write: bool = False) -> tuple[bool, str]:
+    """
+    Validate a SQL statement.
+    - exactly one statement
+    - no comment tokens that can hide payloads
+    - no always-blocked destructive/admin DDL
+    - read-only by default
+    """
+    script = sql_script.strip()
+    if not script:
+        return False, "SQL script is empty."
+    if "--" in script or "/*" in script or "*/" in script:
+        return False, "SQL comments are not allowed."
+
+    statements = _split_sql_statements(script)
+    if len(statements) != 1:
+        return False, "Only one SQL statement is allowed."
+    statement = statements[0]
+    upper = statement.upper()
+
+    for token in ALWAYS_BLOCKED_SQL_TOKENS:
+        if re.search(rf"\b{token}\b", upper):
+            return False, f"SQL command '{token}' is blocked."
+
+    if not allow_write:
+        if not upper.startswith(READ_ONLY_SQL_PREFIXES):
+            return False, "Only read-only SQL statements are allowed."
+
+    return True, statement
+
+
+def run_sql_script(
+        mysql_conn,
+        sql_script: str,
+        params: Sequence | None = None,
+        commit: bool = False,
+        allow_write: bool = False) -> dict:
     """
     Execute an arbitrary SQL script with parameter binding.
     sql_script: The SQL script to be executed.
@@ -59,21 +114,19 @@ def run_sql_script(mysql_conn, sql_script: str, params: tuple = None, commit: bo
         {"query": "UPDATE users SET name = %s, email = %s WHERE id = %s",
         "params": ["Jane Doe", "jane.doe@example.com", 1]}
     """
-    disabled_cmds = ['DROP', 'DELETE', 'TRUNCATE', 'ALTER']
-    # Check if SQL script is allowed
-    if not is_sql_allowed(sql_script, disabled_cmds):
-        logger.error("Restricted SQL script detected. Execution aborted. ❌")
-        return {"status": "failed",
-                "message": "Restricted SQL script detected. Execution aborted." + \
-                           f"{disabled_cmds} commands are not allowed."}
+    is_valid, validation_result = validate_sql_script(sql_script, allow_write=allow_write)
+    if not is_valid:
+        logger.warning("SQL validation failed: %s", validation_result)
+        return {"status": "failed", "message": validation_result}
+    safe_sql_script = validation_result
 
     try:
         with mysql_conn() as conn:
             with conn.cursor() as cursor:
                 if params:
-                    cursor.execute(sql_script, params)
+                    cursor.execute(safe_sql_script, tuple(params))
                 else:
-                    cursor.execute(sql_script)
+                    cursor.execute(safe_sql_script)
                 if commit:
                     conn.commit()
                     logger.info("SQL script executed successfully and committed to MySQL database. ✅️")
@@ -212,13 +265,13 @@ def delete_data_from_sql_with_id(mysql_conn, tb_name, data_id: int, commit: bool
         with mysql_conn() as conn:
             with conn.cursor() as cursor:
                 # check if record exists in db or not
-                cursor.execute(select_query, (data_id))
+                cursor.execute(select_query, (data_id,))
                 if not cursor.fetchone():
                     logger.error("Data with id: %s does not exist in mysql db.❌", data_id)
                     return {"status": "failed",
                             "message": f"mysql record with id: {data_id} does not exist in db"}
 
-                cursor.execute(del_query, (data_id))
+                cursor.execute(del_query, (data_id,))
                 if commit:
                     conn.commit()
                     logger.info("Data with id: %s deleted from mysql db.✅️", data_id)
@@ -242,7 +295,7 @@ def table_exists(mysql_conn, tb_name: str) -> bool:
                 result = cursor.fetchone()
                 return result is not None
     except pymysql.MySQLError as e:
-        print(f"Error checking if table exists: {e}")
+        logger.error("Error checking if table exists: %s", e)
         return False
 
 
@@ -270,5 +323,5 @@ def entries_exist(mysql_conn, tb_name: str, conditions: dict, logic: str = 'AND'
                 result = cursor.fetchone()
                 return result is not None
     except pymysql.MySQLError as e:
-        print(f"Error checking if entries exist: {e}")
+        logger.error("Error checking if entries exist: %s", e)
         return False
