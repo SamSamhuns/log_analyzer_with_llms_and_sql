@@ -1,6 +1,7 @@
 """
 API data models
 """
+
 from enum import Enum
 from pydantic import BaseModel
 from abc import ABC, abstractmethod
@@ -11,6 +12,7 @@ class SQLQueryParams(BaseModel):
     """
     SQL query and optional parameters
     """
+
     query: str
     params: Optional[List[Any]] = None
     allow_write: bool = False
@@ -18,6 +20,7 @@ class SQLQueryParams(BaseModel):
 
 class QARequest(BaseModel):
     """Request body for retrieval QA."""
+
     query: str
 
 
@@ -25,6 +28,7 @@ class SummarizerMode(str, Enum):
     """
     Summarization modes
     """
+
     INDIVIDUAL = "individual"
     COMBINED = "combined"
 
@@ -33,14 +37,25 @@ class LogFileType(str, Enum):
     """
     Log file types and table names in sql database
     """
+
     ANOMALY_DETECTION_LOG = "anomaly_detection_log"
     RTA_WORKER_SWITCH_LOG = "rta_worker_switch_log"
+
+
+class EmbeddingModel(str, Enum):
+    """
+    Embedding Model Types
+    """
+
+    OPENAI_TEXT_EMBEDDING_MODEL: str = "text-embedding-ada-002"
+    HUGGINGFACE_TEXT_EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
 
 
 class LLMModel(str, Enum):
     """
     LLM Model Types
     """
+
     GPT_3: str = "gpt-3"
     GPT_4: str = "gpt-4"
     GPT_3_5_TURBO_0125: str = "gpt-3.5-turbo-0125"
@@ -53,6 +68,7 @@ class LLMModel(str, Enum):
 
 class SQLQARequest(BaseModel):
     """Request body for text-to-SQL QA."""
+
     log_type: LogFileType
     question: str
     model: LLMModel = LLMModel.GPT_4o_Mini
@@ -62,6 +78,7 @@ class LogText2SQLConfig(ABC):
     """
     log text to sql config
     """
+
     @abstractmethod
     def table_name(self):
         pass

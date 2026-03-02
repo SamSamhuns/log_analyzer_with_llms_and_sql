@@ -1,4 +1,5 @@
 """FastAPI server entrypoint."""
+
 import argparse
 import logging
 import time

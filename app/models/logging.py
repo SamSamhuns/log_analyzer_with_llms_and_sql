@@ -10,6 +10,7 @@ INFO     20
 DEBUG    10
 NOTSET    0
 """
+
 import os
 from pydantic import BaseModel
 
@@ -34,10 +35,7 @@ class LogConfig(BaseModel):
         },
         "error": {
             "()": "uvicorn.logging.DefaultFormatter",
-            "fmt": (
-                "%(levelprefix)s | %(asctime)s | %(name)s | "
-                "%(process)d::%(module)s|%(lineno)s:: %(message)s"
-            ),
+            "fmt": ("%(levelprefix)s | %(asctime)s | %(name)s | %(process)d::%(module)s|%(lineno)s:: %(message)s"),
             "datefmt": "%Y-%m-%d %H:%M:%S",
         },
     }

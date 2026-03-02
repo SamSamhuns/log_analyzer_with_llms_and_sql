@@ -49,3 +49,6 @@ optional = true
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.12.12"
+
+[tool.ruff]
+line-length = 120

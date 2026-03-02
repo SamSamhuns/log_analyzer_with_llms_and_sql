@@ -1,4 +1,5 @@
 """Application configuration and logging setup."""
+
 import os
 from logging.config import dictConfig
 from pathlib import Path
@@ -36,9 +37,7 @@ VERSION: str = os.getenv("API_VERSION", "0.2.0")
 API_SERVER_PORT = int(os.getenv("API_SERVER_PORT", "8080"))
 
 # CORS settings
-CORS_ALLOW_ORIGINS = _to_csv(
-    os.getenv("CORS_ALLOW_ORIGINS", "http://localhost,http://127.0.0.1")
-)
+CORS_ALLOW_ORIGINS = _to_csv(os.getenv("CORS_ALLOW_ORIGINS", "http://localhost,http://127.0.0.1"))
 if not CORS_ALLOW_ORIGINS:
     CORS_ALLOW_ORIGINS = ["http://localhost", "http://127.0.0.1"]
 CORS_ALLOW_CREDENTIALS = _to_bool(os.getenv("CORS_ALLOW_CREDENTIALS"), default=False)

@@ -1,6 +1,7 @@
 """
 Summarization api endpoints
 """
+
 import logging
 from typing import Dict, List
 from fastapi import APIRouter, File, UploadFile, status, HTTPException
@@ -12,16 +13,20 @@ from app.api.langchain_custom.llms import load_llm
 from app.api.langchain_custom.stream_document_loader import CustomStreamDocumentLoader
 
 router = APIRouter()
-logger = logging.getLogger('summarize_route')
+logger = logging.getLogger("summarize_route")
 
 
-@router.post("/files", response_model=Dict,
-             status_code=status.HTTP_200_OK,
-             summary="Summarize uploaded file(s)")
+@router.post(
+    "/files",
+    response_model=Dict,
+    status_code=status.HTTP_200_OK,
+    summary="Summarize uploaded file(s)",
+)
 async def summarize_files(
-        summarizer_mode: SummarizerMode,
-        model: LLMModel = LLMModel.Llamafile,
-        files: List[UploadFile] = File(...),):
+    summarizer_mode: SummarizerMode,
+    model: LLMModel = LLMModel.Llamafile,
+    files: List[UploadFile] = File(...),
+):
     """Extract text from files and summarize based on selected mode"""
     response_data = {}
     try:
@@ -40,7 +45,8 @@ async def summarize_files(
             response_data = {
                 "status": "success",
                 "detail": "Combined summarization successful",
-                "summary": summary}
+                "summary": summary,
+            }
         else:
             # Individual summarization logic
             summaries = {}
@@ -53,7 +59,8 @@ async def summarize_files(
             response_data = {
                 "status": "success",
                 "detail": "Individual summarization successful",
-                "summaries": summaries}
+                "summaries": summaries,
+            }
     except Exception as excep:
         logger.exception("failed to summarize files: %s", excep)
         detail = "Failed to summarize file contents in server"
@@ -61,12 +68,13 @@ async def summarize_files(
     return response_data
 
 
-@router.post("/urls", response_model=Dict,
-             status_code=status.HTTP_200_OK,
-             summary="Summarize content(s) from url")
-async def summarize_urls(
-        urls: List[str],
-        model: LLMModel = LLMModel.Llamafile):
+@router.post(
+    "/urls",
+    response_model=Dict,
+    status_code=status.HTTP_200_OK,
+    summary="Summarize content(s) from url",
+)
+async def summarize_urls(urls: List[str], model: LLMModel = LLMModel.Llamafile):
     """Extract text from files, summarize contents & return summary"""
     status_code = status.HTTP_200_OK
     response_data = {}

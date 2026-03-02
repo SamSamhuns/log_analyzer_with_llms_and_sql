@@ -1,6 +1,7 @@
 """
 Test stream document loader api
 """
+
 import json
 import pytest
 from app.api.langchain_custom.stream_document_loader import CustomStreamDocumentLoader
@@ -17,6 +18,7 @@ def test_lazy_load(mock_one_anomaly_det_log_file_path_and_content):
     for doc, cline in zip(documents, content.splitlines()):
         cline = cline.decode(enc)
         assert doc.page_content.strip() == cline
+
 
 @pytest.mark.asyncio
 async def test_alazy_load(mock_one_anomaly_det_log_file_path_and_content):

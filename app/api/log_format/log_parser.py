@@ -4,7 +4,8 @@ from datetime import datetime
 from app.models.model import LogFileType
 
 
-logger = logging.getLogger('log_format_api')
+logger = logging.getLogger("log_format_api")
+
 
 def conv_isotimestamp_to_datetime(timestamp: str):
     """
@@ -12,9 +13,9 @@ def conv_isotimestamp_to_datetime(timestamp: str):
     """
     iso_string = timestamp.strip().rstrip("Z")
     # Truncate fractional seconds to 6 digits (microseconds)
-    if '.' in iso_string:
-        date_part, frac_part = iso_string.split('.')
-        frac_part = (frac_part + '000000')[:6]  # Ensure at least 6 digits
+    if "." in iso_string:
+        date_part, frac_part = iso_string.split(".")
+        frac_part = (frac_part + "000000")[:6]  # Ensure at least 6 digits
         iso_string = f"{date_part}.{frac_part}"
 
     timestamp = datetime.fromisoformat(iso_string).strftime("%Y-%m-%dT%H:%M:%S.%f")
@@ -36,10 +37,12 @@ def gen_anomaly_detection_log_obj_list(log_file_content: str, logfile_id: str) -
             inf_time = float(inf_time.strip().split()[-1][:-2])
             pred = int(pred.strip().split()[-1])
 
-            log_obj = {"log_fid": logfile_id,
-                       "timestamp": timestamp,
-                       "inference_time": inf_time,
-                       "prediction": pred}
+            log_obj = {
+                "log_fid": logfile_id,
+                "timestamp": timestamp,
+                "inference_time": inf_time,
+                "prediction": pred,
+            }
             log_obj_list.append(log_obj)
         except Exception as excep:
             logger.debug("Skipped line %d due to error: %s", i, excep)
@@ -65,10 +68,12 @@ def gen_rta_worker_switch_log_obj_list(log_file_content: str, logfile_id: str) -
             goal_type = timestamp_and_goal_type.split()[-1][1:-1]
             rta_status = int(rta_status.strip().split()[-1][1:-1])
 
-            log_obj = {"log_fid": logfile_id,
-                       "timestamp": timestamp,
-                       "goal_type": goal_type,
-                       "rta_status": rta_status}
+            log_obj = {
+                "log_fid": logfile_id,
+                "timestamp": timestamp,
+                "goal_type": goal_type,
+                "rta_status": rta_status,
+            }
             log_obj_list.append(log_obj)
         except Exception as excep:
             logger.debug("Skipped line due to error: %s", excep)

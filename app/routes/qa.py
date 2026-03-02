@@ -1,6 +1,7 @@
 """
 Question Answer api endpoint
 """
+
 import logging
 from typing import Dict
 from fastapi import APIRouter, status, HTTPException
@@ -16,21 +17,19 @@ from app.models.model import QARequest, LLMModel
 
 
 router = APIRouter()
-logger = logging.getLogger('qa_route')
+logger = logging.getLogger("qa_route")
 RAG_PROMPT = ChatPromptTemplate.from_template(
-    "Answer the question using only the provided context.\n\n"
-    "Context:\n{context}\n\n"
-    "Question:\n{question}\n\n"
-    "Answer:"
+    "Answer the question using only the provided context.\n\nContext:\n{context}\n\nQuestion:\n{question}\n\nAnswer:"
 )
 
 
-@router.post("", response_model=Dict,
-             status_code=status.HTTP_200_OK,
-             summary="Extract query emb, find most similar embs from vector db & answer query with chatbot")
-async def question_answer(
-        request_data: QARequest,
-        model: LLMModel = LLMModel.GPT_4o_Mini):
+@router.post(
+    "",
+    response_model=Dict,
+    status_code=status.HTTP_200_OK,
+    summary="Extract query emb, find most similar embs from vector db & answer query with chatbot",
+)
+async def question_answer(request_data: QARequest, model: LLMModel = LLMModel.GPT_4o_Mini):
     """Extract query emb, find most similar embs from vector db & answer query with chatbot"""
     status_code = status.HTTP_200_OK
     response_data = {}
@@ -52,9 +51,11 @@ async def question_answer(
         )
 
         answer = rag_chain.invoke(request_data.query)
-        response_data = {"status": "success",
-                         "query": request_data.query,
-                         "answer": answer}
+        response_data = {
+            "status": "success",
+            "query": request_data.query,
+            "answer": answer,
+        }
     except Exception as excep:
         logger.exception("failed to run RAG QA: %s", excep)
         status_code = status.HTTP_400_BAD_REQUEST if status_code == status.HTTP_200_OK else status_code

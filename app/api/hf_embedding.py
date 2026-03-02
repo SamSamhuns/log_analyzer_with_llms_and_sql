@@ -1,6 +1,7 @@
 """
 Huggingface api functions
 """
+
 import os
 import requests
 from app.utils.common import timeit_decorator
@@ -24,7 +25,11 @@ def query_api_online(payload: dict, hf_api_tkn: str, hf_api_url: str, timeout: f
     return response.json()
 
 
-def query_api_docker(payload: str, hf_api_url: str = "http://hf_text_embedding_api:8009/embedding/{text}", timeout: float = 30) -> dict:
+def query_api_docker(
+    payload: str,
+    hf_api_url: str = "http://hf_text_embedding_api:8009/embedding/{text}",
+    timeout: float = 30,
+) -> dict:
     """
     Get embedding of the payload text using a dockerized api endpoint
     Input sequence token length > 256 word pieces are truncated
@@ -45,6 +50,7 @@ if DEBUG:
 
 if __name__ == "__main__":
     import os
+
     HF_API_TOKEN = os.getenv("HF_API_TOKEN")
     HF_API_URL = os.getenv("HF_API_URL")
 
@@ -57,9 +63,9 @@ if __name__ == "__main__":
         "inputs": [
             "Dogs are nice creatures",
             "Dogs are man's best friend",
-            "Humans like dogs"
+            "Humans like dogs",
         ],
-        "options": {"wait_for_model": True}
+        "options": {"wait_for_model": True},
     }
     output = query_api_online(eg_payload, HF_API_TOKEN, HF_API_URL)
     print("len(output) = ", len(output))
@@ -67,8 +73,9 @@ if __name__ == "__main__":
 
     # example of feature extraction pipeline with a locally hosted model
     from sentence_transformers import SentenceTransformer
+
     sentences = ["Humans like dogs"]
 
-    model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+    model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
     embeddings = model.encode(sentences)
     print(embeddings.shape)

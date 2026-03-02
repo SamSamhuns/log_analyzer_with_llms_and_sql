@@ -116,15 +116,15 @@ poetry install --all-groups
 
 ```shell
 # With venv / can also use conda environments
-python -m venv venv
-source venv/bin/activate
+python -m venv venv; source venv/bin/activate
 pip install -r requirements.txt
 ```
 
 Run API:
 
 ```bash
-poetry run uvicorn app.server:app --host 0.0.0.0 --port 8080 --reload
+# from isnide venv or with `poetry run`
+uvicorn app.server:app --host 0.0.0.0 --port 8080 --reload
 ```
 
 ## Option Bii) Alternative uvicorn server with Docker

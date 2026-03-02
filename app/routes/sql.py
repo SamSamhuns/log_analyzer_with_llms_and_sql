@@ -1,6 +1,7 @@
 """
 SQL Question Answer api endpoint
 """
+
 import logging
 from typing import Dict
 from fastapi import APIRouter, status, HTTPException
@@ -12,17 +13,19 @@ from app.core.setup import mysql_conn, TEXT2SQL_CFG_DICT
 from app.core.config import ALLOW_UNSAFE_SQL_SCRIPTS
 
 router = APIRouter()
-logger = logging.getLogger('sql_qa_route')
+logger = logging.getLogger("sql_qa_route")
 
 
-@router.post("/script", response_model=Dict,
-             status_code=status.HTTP_200_OK,
-             summary="Runs SQL query in the database (read-only by default)")
-async def sql_script(
-        request_data: SQLQueryParams):
+@router.post(
+    "/script",
+    response_model=Dict,
+    status_code=status.HTTP_200_OK,
+    summary="Runs SQL query in the database (read-only by default)",
+)
+async def sql_script(request_data: SQLQueryParams):
     """
     Runs an SQL query in the database with optional parameters.
-    
+
     Args:
     - request_data (SQLQueryParams): The SQL query parameters, that contains query and params.
             query (str): The SQL query to execute.
@@ -45,9 +48,7 @@ async def sql_script(
                 detail="Write SQL is disabled by server configuration.",
             )
 
-        commit = allow_write and not query.strip().upper().startswith(
-            ("SELECT", "WITH", "SHOW", "DESCRIBE", "EXPLAIN")
-        )
+        commit = allow_write and not query.strip().upper().startswith(("SELECT", "WITH", "SHOW", "DESCRIBE", "EXPLAIN"))
         sql_resp = run_sql_script(
             mysql_conn,
             query,
@@ -60,7 +61,11 @@ async def sql_script(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=sql_resp.get("message", "Failed to run SQL query."),
             )
-        response_data = {"status": "success", "query": query, "params": params} | sql_resp
+        response_data = {
+            "status": "success",
+            "query": query,
+            "params": params,
+        } | sql_resp
     except HTTPException:
         raise
     except Exception as excep:
@@ -71,11 +76,13 @@ async def sql_script(
     return response_data
 
 
-@router.post("/qa", response_model=Dict,
-             status_code=status.HTTP_200_OK,
-             summary="Convert query into sql command & interact with SQL database")
-async def sql_question_answer(
-        request_data: SQLQARequest):
+@router.post(
+    "/qa",
+    response_model=Dict,
+    status_code=status.HTTP_200_OK,
+    summary="Convert query into sql command & interact with SQL database",
+)
+async def sql_question_answer(request_data: SQLQARequest):
     """
     Converts query into sql command & interact with SQL database
 
@@ -97,7 +104,7 @@ async def sql_question_answer(
             top_k=text2sql_cfg_obj.top_k,
         )
 
-        query, params = sep_query_and_params(llm_sql_query.replace("\"", ""))
+        query, params = sep_query_and_params(llm_sql_query.replace('"', ""))
         sql_resp = run_sql_script(
             mysql_conn,
             query,

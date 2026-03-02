@@ -10,15 +10,18 @@ API_URL = f"http://127.0.0.1:{cfg.API_SERVER_PORT}"
 
 # Configuring the sidebar with options
 st.sidebar.title("Log Analyzer Services")
-option = st.sidebar.radio("Choose a service:", (
-    "Question Answering",
-    "SQL Query Answer",
-    "Run SQL Script",
-    "Summarize URLs",
-    "Summarize Files",
-    "Upsert Logs",
-    "Upsert Files"
-))
+option = st.sidebar.radio(
+    "Choose a service:",
+    (
+        "Question Answering",
+        "SQL Query Answer",
+        "Run SQL Script",
+        "Summarize URLs",
+        "Summarize Files",
+        "Upsert Logs",
+        "Upsert Files",
+    ),
+)
 
 
 def post_api(endpoint, param_dict):
@@ -70,7 +73,7 @@ elif option == "Run SQL Script":
 elif option == "Summarize URLs":
     model = st.selectbox("Select model:", [model.value for model in LLMModel])
     urls = st.text_area("Enter URLs separated by comma:")
-    urls_list = [url.strip() for url in urls.split(',') if url.strip()]
+    urls_list = [url.strip() for url in urls.split(",") if url.strip()]
     if st.button("Summarize URLs"):
         try:
             result = post_api(f"summarize/urls?model={model}", {"json": urls_list})

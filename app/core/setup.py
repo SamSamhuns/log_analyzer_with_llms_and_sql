@@ -1,13 +1,19 @@
 """
 Setup connections
 """
+
 from typing import Callable
 import pymysql
 from pymysql.cursors import DictCursor
 from app.models.model import LogFileType, LogText2SQLConfig
 from app.core.config import (
-    MYSQL_HOST, MYSQL_PORT, MYSQL_USER,
-    MYSQL_PASSWORD, MYSQL_DATABASE, MYSQL_CONNECT_TIMEOUT)
+    MYSQL_HOST,
+    MYSQL_PORT,
+    MYSQL_USER,
+    MYSQL_PASSWORD,
+    MYSQL_DATABASE,
+    MYSQL_CONNECT_TIMEOUT,
+)
 from contextlib import contextmanager
 
 
@@ -18,10 +24,11 @@ def get_mysql_connection() -> pymysql.connections.Connection:
         port=MYSQL_PORT,
         user=MYSQL_USER,
         password=MYSQL_PASSWORD,
-        db=MYSQL_DATABASE,
+        database=MYSQL_DATABASE,
         connect_timeout=MYSQL_CONNECT_TIMEOUT,
         charset="utf8mb4",
-        cursorclass=DictCursor)
+        cursorclass=DictCursor,
+    )
 
 
 @contextmanager
@@ -40,7 +47,6 @@ def mysql_conn() -> Callable:
 ######################################################################
 
 
-
 class ANOMALY_DETECTION_LOG_TEXT2SQL_CFG(LogText2SQLConfig):
     """
     anomaly_detection_log text to sql config
@@ -48,14 +54,14 @@ class ANOMALY_DETECTION_LOG_TEXT2SQL_CFG(LogText2SQLConfig):
 
     table_name = "anomaly_detection_log"
     table_schema = str(["ID", "log_fid", "timestamp", "inference_time", "prediction"])
-    table_examples = '''[
+    table_examples = """[
         (1, '1bd5f7de3578d0ecc13de276ea4a16d7', 2024-08-21, 176.04, 0),
         (2, '1bd5f7de3578d0ecc13de276ea4a16d7', 2024-08-21, 90.99, 0),
         (3, '1bd5f7de3578d0ecc13de276ea4a16d7', 2024-08-21, 53.99, 0),
         (4, '1bd5f7de3578d0ecc13de276ea4a16d7', 2024-08-21, 44.56, 0),
         (5, '1bd5f7de3578d0ecc13de276ea4a16d7', 2024-08-21, 49.74, 0)]
-    '''
-    table_info = table_schema + '\nExamples of entries:\n' + table_examples
+    """
+    table_info = table_schema + "\nExamples of entries:\n" + table_examples
     top_k = 5
 
     # Definition of the running logic of the tool
@@ -93,14 +99,14 @@ class RTA_WORKER_SWITCH_LOG_TEXT2SQL_CFG(LogText2SQLConfig):
 
     table_name = "rta_worker_switch_log"
     table_schema = str(["ID", "log_fid", "timestamp", "goal_type", "rta_status"])
-    table_examples = '''[
+    table_examples = """[
         (1, '1bd5f7de3578d0ecc13de276ea4a16d7', 2024-08-21, 'WORKER', 0),
         (2, '1bd5f7de3578d0ecc13de276ea4a16d7', 2024-08-21, 'WORKER', 0),
         (3, '1bd5f7de3578d0ecc13de276ea4a16d7', 2024-08-21, 'WORKER', 0),
         (4, '1bd5f7de3578d0ecc13de276ea4a16d7', 2024-08-21, 'WORKER', 0),
         (5, '1bd5f7de3578d0ecc13de276ea4a16d7', 2024-08-21, 'WORKER', 0)]
-    '''
-    table_info = table_schema + '\nExamples of entries:\n' + table_examples
+    """
+    table_info = table_schema + "\nExamples of entries:\n" + table_examples
     top_k = 5
 
     # Definition of the running logic of the tool
@@ -132,5 +138,5 @@ class RTA_WORKER_SWITCH_LOG_TEXT2SQL_CFG(LogText2SQLConfig):
 
 TEXT2SQL_CFG_DICT = {
     LogFileType.ANOMALY_DETECTION_LOG.value: ANOMALY_DETECTION_LOG_TEXT2SQL_CFG,
-    LogFileType.RTA_WORKER_SWITCH_LOG.value: RTA_WORKER_SWITCH_LOG_TEXT2SQL_CFG
+    LogFileType.RTA_WORKER_SWITCH_LOG.value: RTA_WORKER_SWITCH_LOG_TEXT2SQL_CFG,
 }

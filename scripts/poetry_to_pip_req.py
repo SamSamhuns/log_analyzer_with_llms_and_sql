@@ -27,9 +27,7 @@ def poetry_to_pip(name: str, constraint: str) -> str:
     if constraint.startswith("~"):
         base_version = constraint[1:]
         parts = [int(p) for p in base_version.split(".")]
-        upper = (
-            f"{parts[0] + 1}.0.0" if len(parts) == 1 else f"{parts[0]}.{parts[1] + 1}.0"
-        )
+        upper = f"{parts[0] + 1}.0.0" if len(parts) == 1 else f"{parts[0]}.{parts[1] + 1}.0"
         return f"{name}>={base_version},<{upper}"
 
     # already pip-compatible

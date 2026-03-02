@@ -1,6 +1,7 @@
 """
 Test configurations
 """
+
 from io import BytesIO
 from datetime import datetime
 from typing import Callable, Tuple
@@ -18,10 +19,10 @@ MYSQL_TEST_LOG_ID_TB_NAME = "test_log_fid"
 MYSQL_TEST_GENERAL_ID_TB_NAME = "test_general_fid"
 
 # config imports
-from app.core.config import (
-    MYSQL_LOG_ID_TB_NAME, MYSQL_GENERAL_ID_TB_NAME)
+from app.core.config import MYSQL_LOG_ID_TB_NAME, MYSQL_GENERAL_ID_TB_NAME
 from app.server import upsert
 from app.core.setup import mysql_conn, ANOMALY_DETECTION_LOG_TEXT2SQL_CFG
+
 # get default table names and rename to test tables
 upsert.MYSQL_LOG_ID_TB_NAME = MYSQL_TEST_LOG_ID_TB_NAME
 upsert.MYSQL_GENERAL_ID_TB_NAME = MYSQL_TEST_GENERAL_ID_TB_NAME
@@ -32,7 +33,7 @@ def _load_file_content(fpath: str) -> bytes:
     """
     Load file from fpath and return as bytes
     """
-    with open(fpath, 'rb') as fptr:
+    with open(fpath, "rb") as fptr:
         file_content = fptr.read()
     return file_content
 
@@ -54,9 +55,17 @@ def test_mysql_connec():
         # create test tables if not present & purge all existing data
         print("Creating test tables based on existing table schemas")
         for orig_tb, test_tb in zip(
-                [ANOMALY_DETECTION_LOG_TEXT2SQL_CFG.table_name, MYSQL_LOG_ID_TB_NAME, MYSQL_GENERAL_ID_TB_NAME],
-                [MYSQL_TEST_ANOMALY_DET_LOG_TABLE, MYSQL_TEST_LOG_ID_TB_NAME, MYSQL_TEST_GENERAL_ID_TB_NAME]
-                ):
+            [
+                ANOMALY_DETECTION_LOG_TEXT2SQL_CFG.table_name,
+                MYSQL_LOG_ID_TB_NAME,
+                MYSQL_GENERAL_ID_TB_NAME,
+            ],
+            [
+                MYSQL_TEST_ANOMALY_DET_LOG_TABLE,
+                MYSQL_TEST_LOG_ID_TB_NAME,
+                MYSQL_TEST_GENERAL_ID_TB_NAME,
+            ],
+        ):
             with mysql_conn() as conn:
                 try:
                     with conn.cursor() as cursor:
@@ -70,7 +79,11 @@ def test_mysql_connec():
     finally:
         # drop tables in teardown
         print("Tearing mysql connection")
-        for test_tb in [MYSQL_TEST_ANOMALY_DET_LOG_TABLE, MYSQL_TEST_LOG_ID_TB_NAME, MYSQL_TEST_GENERAL_ID_TB_NAME]:
+        for test_tb in [
+            MYSQL_TEST_ANOMALY_DET_LOG_TABLE,
+            MYSQL_TEST_LOG_ID_TB_NAME,
+            MYSQL_TEST_GENERAL_ID_TB_NAME,
+        ]:
             with mysql_conn() as conn:
                 with conn.cursor() as cursor:
                     try:
@@ -83,18 +96,20 @@ def test_mysql_connec():
 @pytest.fixture(scope="session")
 def gen_mock_anomaly_det_log_data() -> Callable:
     """
-    returns a func to create a data dict 
+    returns a func to create a data dict
     for testing with anomaly_detection_log
     """
+
     def _gen_data(fid: int = -1):
         test_data = {
-            'ID': fid,
-            'log_fid': '2bd5f7de3578d0ecc13de276ea4a16d8',
-            'timestamp': datetime(2024, 8, 21, 0, 0),
-            'inference_time': 50.12,
-            'prediction': 1
+            "ID": fid,
+            "log_fid": "2bd5f7de3578d0ecc13de276ea4a16d8",
+            "timestamp": datetime(2024, 8, 21, 0, 0),
+            "inference_time": 50.12,
+            "prediction": 1,
         }
         return test_data
+
     return _gen_data
 
 
@@ -109,7 +124,7 @@ def mock_valid_anomaly_det_log_str() -> str:
 
 @pytest.fixture(scope="session")
 def mock_invalid_anomaly_det_log_str() -> str:
-    """Generate anomaly det log str 
+    """Generate anomaly det log str
     with one valid and one invalid line"""
     return """
     2024-01-01 12:00:00, 100ms, 1
@@ -137,10 +152,10 @@ def mock_file_url() -> str:
 @pytest.fixture
 def gen_mock_upload_file() -> Callable:
     """Mock UploadFile"""
+
     def _gen_uploadfile(fname: str = "sample.log"):
-        return UploadFile(
-            filename=fname,
-            file=BytesIO(b"example content"))
+        return UploadFile(filename=fname, file=BytesIO(b"example content"))
+
     return _gen_uploadfile
 
 
@@ -153,7 +168,7 @@ def mock_load_summarize_chain(mocker):
     """
     mock_chain = mocker.MagicMock()
     mock_chain.invoke.return_value = {"output_text": "Mocked Summary"}
-    mocker.patch('app.server.summarize.load_summarize_chain', return_value=mock_chain)
+    mocker.patch("app.server.summarize.load_summarize_chain", return_value=mock_chain)
     return mock_chain
 
 
@@ -161,7 +176,7 @@ def mock_load_summarize_chain(mocker):
 def mock_load_llm(mocker):
     """Mock load_llm using a separate fixture"""
     mock_llm = mocker.MagicMock()
-    mocker.patch('app.server.summarize.load_llm', return_value=mock_llm)
+    mocker.patch("app.server.summarize.load_llm", return_value=mock_llm)
     return mock_llm
 
 
@@ -169,7 +184,7 @@ def mock_load_llm(mocker):
 def mock_text_to_sql(mocker):
     """Mock text_to_sql using a separate fixture"""
     mock_text2sql_resp = f"SELECT * FROM {MYSQL_TEST_ANOMALY_DET_LOG_TABLE} LIMIT 5;"
-    mocker.patch('app.server.sql.text_to_sql', return_value=mock_text2sql_resp)
+    mocker.patch("app.server.sql.text_to_sql", return_value=mock_text2sql_resp)
     return mock_text2sql_resp
 
 
@@ -177,8 +192,8 @@ def mock_text_to_sql(mocker):
 def mock_chroma_db(mocker):
     """Mock Chroma db using a separate fixture"""
     mock_chroma = mocker.MagicMock()
-    mocker.patch('app.server.upsert.Chroma')
-    mocker.patch('app.server.upsert.Chroma.from_documents')
+    mocker.patch("app.server.upsert.Chroma")
+    mocker.patch("app.server.upsert.Chroma.from_documents")
     return mock_chroma
 
 
@@ -186,5 +201,5 @@ def mock_chroma_db(mocker):
 def mock_openai_emb(mocker):
     """Mock OpenAIEmbeddings"""
     mock_openai_emb = mocker.MagicMock()
-    mocker.patch('app.server.upsert.OpenAIEmbeddings')
+    mocker.patch("app.server.upsert.OpenAIEmbeddings")
     return mock_openai_emb

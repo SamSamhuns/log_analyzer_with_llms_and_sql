@@ -1,6 +1,7 @@
 """
 Common utils
 """
+
 import os
 import time
 import hashlib
@@ -15,6 +16,7 @@ def timeit_decorator(func: Callable) -> Callable:
     """
     Decorator that prints the runtime of the function in seconds.
     """
+
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         t_0 = time.time()
@@ -23,6 +25,7 @@ def timeit_decorator(func: Callable) -> Callable:
         call_time_msg = f"function {func.__name__} call time {t_1 - t_0:.3f}s"
         logger.info(call_time_msg)
         return result
+
     return wrapper
 
 
@@ -58,7 +61,7 @@ def get_file_md5(file: Union[str, bytes], byte_chunk: int = 8192) -> str:
     Returns: The MD5 hash of the file (str).
     """
     hash_md5 = hashlib.md5()
-    if isinstance(file, str):    # if file is a filepath
+    if isinstance(file, str):  # if file is a filepath
         with open(file, "rb") as f_ptr:
             for chunk in iter(lambda: f_ptr.read(byte_chunk), b""):
                 hash_md5.update(chunk)
