@@ -55,7 +55,17 @@ class LLMModel(str, Enum):
     """
     LLM Model Types
     """
-
+    # latest models
+    GPT_5 = "gpt-5"
+    GPT_5_1 = "gpt-5.1"
+    GPT_5_2 = "gpt-5.2"
+    GPT_5_CODEX = "gpt-5-codex"
+    GPT_5_2_CODEX = "gpt-5.2-codex"
+    GPT_5_1_CODEX = "gpt-5.1-codex"
+    GPT_5_1_CODEX_MAX = "gpt-5.1-codex-max"
+    GPT_5_1_CODEX_MINI = "gpt-5.1-codex-mini"
+    CODEX_MINI = "codex-mini"
+    # legacy models
     GPT_3: str = "gpt-3"
     GPT_4: str = "gpt-4"
     GPT_3_5_TURBO_0125: str = "gpt-3.5-turbo-0125"

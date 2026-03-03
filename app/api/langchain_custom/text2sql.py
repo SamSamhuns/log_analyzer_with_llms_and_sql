@@ -1,14 +1,68 @@
-from langchain_openai import ChatOpenAI
+import json
+import re
+from typing import Any
+
 from langchain_core.prompts import ChatPromptTemplate
-from pydantic import BaseModel, Field
+from langchain_openai import ChatOpenAI
+
+_THINK_BLOCK_RE = re.compile(r"<think>[\s\S]*?(?:</think>|$)", flags=re.IGNORECASE)
+_CODE_BLOCK_RE = re.compile(r"```(?:sql)?\s*(.*?)```", flags=re.IGNORECASE | re.DOTALL)
+_SQL_START_RE = re.compile(r"\b(SELECT|WITH|SHOW|DESCRIBE|EXPLAIN)\b", flags=re.IGNORECASE)
 
 
-class SQLResponse(BaseModel):
-    """
-    Response schema.
-    """
+def _message_to_text(message: Any) -> str:
+    """Convert a LangChain message payload into plain text."""
+    content = getattr(message, "content", message)
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        text_chunks: list[str] = []
+        for item in content:
+            if isinstance(item, str):
+                text_chunks.append(item)
+                continue
+            if isinstance(item, dict) and isinstance(item.get("text"), str):
+                text_chunks.append(item["text"])
+        return "\n".join(text_chunks).strip()
+    return str(content)
 
-    SQLQuery: str = Field(..., description="SQL Query to run.")
+
+def _extract_sql_query(raw_output: str) -> str:
+    """Extract an executable SQL query from a model response."""
+    output = raw_output.strip()
+    if not output:
+        raise ValueError("LLM returned an empty response while generating SQL.")
+
+    # Some models emit internal reasoning tags in content; strip them.
+    output = _THINK_BLOCK_RE.sub("", output).strip()
+
+    if output.startswith("{"):
+        try:
+            payload = json.loads(output)
+            if isinstance(payload, dict) and isinstance(payload.get("SQLQuery"), str):
+                output = payload["SQLQuery"].strip()
+        except json.JSONDecodeError:
+            pass
+
+    code_block_match = _CODE_BLOCK_RE.search(output)
+    if code_block_match:
+        output = code_block_match.group(1).strip()
+
+    output = output.replace("```sql", "").replace("```", "").strip()
+    output = output.strip().strip('"').strip("'").strip()
+
+    sql_start_match = _SQL_START_RE.search(output)
+    if sql_start_match:
+        output = output[sql_start_match.start() :].strip()
+
+    if ";" in output:
+        first_statement, remainder = output.split(";", 1)
+        if remainder.strip():
+            output = f"{first_statement.strip()};"
+
+    if not output:
+        raise ValueError("No SQL query could be extracted from the LLM response.")
+    return output
 
 
 def text_to_sql(
@@ -30,6 +84,7 @@ def text_to_sql(
     text2sql_prompt = ChatPromptTemplate.from_messages(
         [
             ("system", text2sql_cfg_obj.sql_prompt_template),
+            ("system", "Return exactly one SQL query only. Do not include reasoning, markdown, XML tags, or explanations.",),
             ("human", "{input}"),
         ]
     )
@@ -38,15 +93,11 @@ def text_to_sql(
         model=llm_config["model"],
         temperature=llm_config["temperature"],
         verbose=verbose,
-    ).with_structured_output(SQLResponse)
+    )
     text2sql_runnable = text2sql_prompt.partial(table_info=text2sql_cfg_obj.table_info, top_k=top_k) | text2sql_model
 
-    # return text2sql_runnable.to_json()['kwargs']['first'].json()
-    sql_query = text2sql_runnable.with_config({"run_name": "text2sql_runnable"}).invoke(
+    llm_response = text2sql_runnable.with_config({"run_name": "text2sql_runnable"}).invoke(
         {"input": question, "table_name": text2sql_cfg_obj.table_name}
     )
-
-    my_sql_query = sql_query.SQLQuery.replace('"', "").strip()
-    if my_sql_query.startswith("```"):
-        my_sql_query = my_sql_query.replace("```sql", "").replace("```", "").strip()
-    return my_sql_query
+    mysql_query = _extract_sql_query(_message_to_text(llm_response))
+    return mysql_query
