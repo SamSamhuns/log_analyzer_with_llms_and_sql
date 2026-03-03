@@ -33,6 +33,9 @@ Backend service for log analysis using FastAPI, LangChain, Chroma, and MariaDB.
 - Chroma for embedding/vector retrieval
 - Optional Streamlit frontend (`app/streamlit_frontend.py`)
 
+> [!NOTE]
+> Instead of using the OpenAI api, the https://github.com/RayBytes/ChatMock project allows yout to use the ChatGPT web login and the web based api for free like Codex.
+
 ## Setup
 
 ### 1. Create `.env` with `cp .env.example .env`
@@ -51,6 +54,7 @@ CORS_ALLOW_CREDENTIALS=false
 
 # OpenAI / LangChain
 # alternative for openai api: https://github.com/RayBytes/ChatMock
+# Add OPENAI_API_BASE=http://127.0.0.1:8000/v1 when using ChatMock
 OPENAI_API_KEY=<OPENAI_API_KEY>
 USER_AGENT=log_analyzer
 LANGCHAIN_PROJECT=log_analyzer
@@ -101,12 +105,6 @@ docker compose --profile admin up -d mysql-admin
 
 ## Option Bi) Run API Locally (without API container)
 
-Start DB services:
-
-```bash
-docker compose up -d mysql
-```
-
 Install requirements:
 
 ```shell
@@ -118,6 +116,12 @@ poetry install --all-groups
 # With venv / can also use conda environments
 python -m venv venv; source venv/bin/activate
 pip install -r requirements.txt
+```
+
+Start DB services:
+
+```bash
+docker compose up -d mysql
 ```
 
 Run API:
