@@ -50,5 +50,10 @@ optional = true
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.12.12"
 
+[tool.pytest.ini_options]
+markers = [
+    "order: marker used to control test execution order",
+]
+
 [tool.ruff]
 line-length = 120
