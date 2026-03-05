@@ -3,6 +3,7 @@ pymysql api functions
 """
 
 from typing import List, Tuple, Sequence
+from contextlib import contextmanager
 import re
 import logging
 import pymysql
@@ -11,6 +12,16 @@ logger = logging.getLogger("mysql_api")
 
 READ_ONLY_SQL_PREFIXES = ("SELECT", "WITH", "SHOW", "DESCRIBE", "EXPLAIN")
 ALWAYS_BLOCKED_SQL_TOKENS = ("DROP", "TRUNCATE", "ALTER", "CREATE", "GRANT", "REVOKE", "LOCK", "UNLOCK",)
+
+
+@contextmanager
+def _get_connection(mysql_conn, conn=None):
+    """Yield an existing connection or open a temporary one."""
+    if conn is not None:
+        yield conn
+        return
+    with mysql_conn() as local_conn:
+        yield local_conn
 
 
 def sep_query_and_params(query: str) -> Tuple[str, Tuple]:
@@ -148,10 +159,11 @@ def run_sql_script(
         return {"status": "failed", "message": f"MySQL script execution error: {excep}"}
 
 
-def insert_bulk_data_into_sql(mysql_conn, tb_name, data_dicts: list, commit: bool = True) -> dict:
+def insert_bulk_data_into_sql(mysql_conn, tb_name, data_dicts: list, commit: bool = True, conn=None) -> dict:
     """
     Insert multiple records into a MySQL table with param binding. Efficiently handles bulk inserts.
-    Note: the transaction must be committed after if commit is False
+    Note: the transaction must be committed after if commit is False.
+    Optionally accepts an existing mysql connection object for shared transactions.
     """
     if not data_dicts:
         return {"status": "failed", "message": "No data provided"}
@@ -166,22 +178,22 @@ def insert_bulk_data_into_sql(mysql_conn, tb_name, data_dicts: list, commit: boo
     values = [tuple(data_dict.values()) for data_dict in data_dicts]
 
     try:
-        with mysql_conn() as conn:
-            with conn.cursor() as cursor:
+        with _get_connection(mysql_conn, conn=conn) as active_conn:
+            with active_conn.cursor() as cursor:
                 logger.info("Attempting to bulk insert %d records into mysql db.", len(values))
                 cursor.executemany(query, values)
-                if commit:
-                    conn.commit()
-                    logger.info("%d records bulk inserted into mysql db.✅️", len(values))
-                    return {
-                        "status": "success",
-                        "message": "Bulk records inserted into mysql db",
-                    }
-                logger.info("Bulk record insertion waiting to be committed to mysql db.🕓")
+            if commit:
+                active_conn.commit()
+                logger.info("%d records bulk inserted into mysql db.✅️", len(values))
                 return {
                     "status": "success",
-                    "message": "Bulk record insertion waiting to be committed to mysql db.",
+                    "message": "Bulk records inserted into mysql db",
                 }
+            logger.info("Bulk record insertion waiting to be committed to mysql db.🕓")
+            return {
+                "status": "success",
+                "message": "Bulk record insertion waiting to be committed to mysql db.",
+            }
     except pymysql.Error as excep:
         logger.error("%s: mysql bulk record insertion failed ❌", excep)
         return {
@@ -190,10 +202,11 @@ def insert_bulk_data_into_sql(mysql_conn, tb_name, data_dicts: list, commit: boo
         }
 
 
-def insert_data_into_sql(mysql_conn, tb_name, data_dict: dict, commit: bool = True) -> dict:
+def insert_data_into_sql(mysql_conn, tb_name, data_dict: dict, commit: bool = True, conn=None) -> dict:
     """
     Insert data_dict into mysql table with param binding
-    Note: the transaction must be commited after if commit is False
+    Note: the transaction must be commited after if commit is False.
+    Optionally accepts an existing mysql connection object for shared transactions.
     """
     # query fmt: `INSERT INTO tb_name (id, col1_name, col2_name) VALUES (%s, %s, %s)`
     col_names = ", ".join(data_dict.keys())
@@ -201,21 +214,21 @@ def insert_data_into_sql(mysql_conn, tb_name, data_dict: dict, commit: bool = Tr
     query = f"INSERT INTO {tb_name} ({col_names}) VALUES ({placeholders})".replace("'", "")
     values = tuple(data_dict.values())
     try:
-        with mysql_conn() as conn:
-            with conn.cursor() as cursor:
+        with _get_connection(mysql_conn, conn=conn) as active_conn:
+            with active_conn.cursor() as cursor:
                 cursor.execute(query, values)
-                if commit:
-                    conn.commit()
-                    logger.info("record inserted into mysql db.✅️")
-                    return {
-                        "status": "success",
-                        "message": "record inserted into mysql db",
-                    }
-                logger.info("record insertion waiting to be committed to mysql db.🕓")
+            if commit:
+                active_conn.commit()
+                logger.info("record inserted into mysql db.✅️")
                 return {
                     "status": "success",
-                    "message": "record insertion waiting to be committed to mysql db.",
+                    "message": "record inserted into mysql db",
                 }
+            logger.info("record insertion waiting to be committed to mysql db.🕓")
+            return {
+                "status": "success",
+                "message": "record insertion waiting to be committed to mysql db.",
+            }
     except pymysql.Error as excep:
         logger.error("%s: mysql record insertion failed ❌", excep)
         return {"status": "failed", "message": "mysql record insertion error"}
